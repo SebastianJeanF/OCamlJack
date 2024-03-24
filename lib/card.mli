@@ -1,3 +1,4 @@
+(*ssm238*)
 (** Type representing parts of a playing card. *)
 type rank = int
 type suit = Spades | Hearts | Diamonds | Clubs

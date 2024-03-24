@@ -1,3 +1,4 @@
+(*ssm238*)
 type rank = int
 type suit = Spades | Hearts | Diamonds | Clubs
 
