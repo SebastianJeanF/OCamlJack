@@ -1,4 +1,6 @@
-(*ssm238*)
+(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), 
+   Sriram Murali (ssm238), Varun Gande (vg262) *)
+   
 (** Type representing a deck of cards. *)
 type deck
 

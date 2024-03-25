@@ -1,4 +1,6 @@
-(*ssm238*)
+(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), 
+   Sriram Murali (ssm238), Varun Gande (vg262) *)
+   
 (** Type representing parts of a playing card. *)
 type rank = int
 type suit = Spades | Hearts | Diamonds | Clubs
