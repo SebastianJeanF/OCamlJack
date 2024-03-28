@@ -1,0 +1,35 @@
+---
+# Members of your group.
+group:
+  - name: Varun Gande
+    netid: vg262
+  - name: Sebastian Jean-Francois
+    netid: sj728
+  - name: Eric Han
+    netid: eh636
+  - name: Sriram Murali
+    netid: ssm238
+# Your PM.
+pm:
+  name: Tony Mao
+  netid: twm59
+# Set to false if you don't want your gallery entry to be public.
+publish: true
+# Pithy title
+title: "OCamlJack: TerminalTitans Edition"
+# OK if this is a Cornell Github link, but public gallery viewers won't be able to see it.
+git-repo: "https://github.com/cs3110/textbook"
+# If you have no demo screencast, replace the url string with an empty string ""
+demo-video-url: ""
+# Write a short, attention-grabbing description of your project.
+desc: >
+  OCamlJack: TerminalTitans Edition is a meticulously crafted implementation of 
+  the classic casino game Blackjack, developed entirely in OCaml. This project 
+  aims to provide an immersive and challenging gaming experience while 
+  showcasing the power and versatility of OCaml in game development.
+
+  Enjoy a sleek and intuitive terminal interface designed for seamless gameplay.
+  Tailor your gaming experience with customizable options, including adjustable 
+  bet sizes, number of decks, and player strategies. Whether you're a novice or 
+  a seasoned pro, OCamlJack offers gameplay that suits your preferences. Let the
+  fun begin!
