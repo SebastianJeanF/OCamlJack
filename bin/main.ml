@@ -7,3 +7,10 @@ let program () =
   ()
 
 let () = program ()
+
+(* Get card information from player and dealer (number and suit of each open
+   card) *)
+
+(* Get card information of player after they make a move *)
+
+(* Get card information of everyone at end of game AND who won/lost *)

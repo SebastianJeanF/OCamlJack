@@ -1,0 +1,79 @@
+commit 2336b18cbc0ed2a983fce527814613fed3804158
+Author: Sebastian Jean-Francois <sj728@cornell.edu>
+Date:   Thu Mar 28 17:16:09 2024 -0400
+
+    Add INSTALL.md
+
+commit 1cd60c51d17a7a3e28fcd6efcd3c02a34c5e9825
+Author: Varun Gande <vg262@cornell.edu>
+Date:   Thu Mar 28 13:07:20 2024 -0400
+
+    Added project YAML file
+
+commit 3ac449cefb77dad9fb9cfe0b388d7b89fd8f2ddf
+Author: Varun Gande <vg262@cornell.edu>
+Date:   Wed Mar 27 23:50:32 2024 -0400
+
+    Created player compilation unit
+
+commit 59f9d46c875d5b29555df4020d8bc1b7f91b332c
+Author: Sebastian Jean-Francois <sj728@cornell.edu>
+Date:   Mon Mar 25 14:04:04 2024 -0400
+
+    Add Ocaml formatting
+
+commit 8e2cdf2eac48a60943c4e81fe27e6347c9e92c27
+Author: Sebastian Jean-Francois <sj728@cornell.edu>
+Date:   Mon Mar 25 13:58:00 2024 -0400
+
+    Partially write Game interface
+    - Wrote representation types and function specifications for game file, temporarily commented out to not break program
+    - Added author attribution to each file
+
+commit 1653d628981243fa4451d8954d8dc9f5f9b93223
+Author: Sriram Murali <ssm238@cornell.edu>
+Date:   Sun Mar 24 17:43:03 2024 -0400
+
+    Added Card and Deck frameworks
+
+commit 8b1b400b4b5c037808866f2dfe4af64cb204350a
+Author: Sriram Murali <ssm238@cornell.edu>
+Date:   Sun Mar 24 17:38:30 2024 -0400
+
+    Added original dune files
+
+commit 698f46a5c2e5cd7477625a41eeabc6cf65ef9247
+Author: Sriram Murali <ssm238@cornell.edu>
+Date:   Sun Mar 24 17:25:48 2024 -0400
+
+    Added initial dune files
+
+commit fa93472e7f68d5964b9646728485080ff350f71d
+Author: Sebastian Jean-Francois <sj728@cornell.edu>
+Date:   Tue Mar 5 17:33:44 2024 -0500
+
+    Update README.md
+
+commit fc5c424b1eeb3b8a21f15a70257e7fd2765d4650
+Author: Eric Han  <14432+eh636@users.noreply.github.coecis.cornell.edu>
+Date:   Tue Mar 5 17:33:09 2024 -0500
+
+    Update README.md
+
+commit c85e69c06c9bc38c8d121679386e9a29f8edbca4
+Author: Varun Gande <vg262@cornell.edu>
+Date:   Tue Mar 5 17:18:39 2024 -0500
+
+    Added vg262 to README
+
+commit 9aacbebcca1ed7e8e8dd8e5ca4e8d5d95d7ea5e9
+Author: Sriram Murali <ssm238@cornell.edu>
+Date:   Tue Mar 5 17:07:15 2024 -0500
+
+    Update README.md Sriram
+
+commit 94c9fafc4e96b86e91f67a42f464472a2df83843
+Author: Sriram Murali <ssm238@cornell.edu>
+Date:   Tue Mar 5 17:05:04 2024 -0500
+
+    Initial commit

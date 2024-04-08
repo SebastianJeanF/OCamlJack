@@ -1,22 +1,24 @@
-(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), 
-   Sriram Murali (ssm238), Varun Gande (vg262) *)
+(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), Sriram Murali
+   (ssm238), Varun Gande (vg262) *)
 
 open Card
 
 type deck = card list
 
 let create_deck () =
-  let ranks = [1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13] in
-  let suits = [Spades; Hearts; Diamonds; Clubs] in
+  let ranks = [ 1; 2; 3; 4; 5; 6; 7; 8; 9; 10; 11; 12; 13 ] in
+  let suits = [ Spades; Hearts; Diamonds; Clubs ] in
   let make_card rank suit = create rank suit in
-  let cards = List.concat (List.map (fun s -> List.map (make_card s) suits) ranks) in
+  let cards =
+    List.concat (List.map (fun s -> List.map (make_card s) suits) ranks)
+  in
   cards
 
 let shuffle_deck deck =
   Random.self_init ();
   let rec shuffle = function
     | [] -> []
-    | [x] -> [x]
+    | [ x ] -> [ x ]
     | lst ->
         let len = List.length lst in
         let i = Random.int len in
@@ -25,7 +27,7 @@ let shuffle_deck deck =
         el :: shuffle rest
   in
   let shuffled = shuffle deck in
-  List.iter (fun x -> ignore (Random.int (get_rank x))) shuffled 
+  List.iter (fun x -> ignore (Random.int (get_rank x))) shuffled
 
 let draw_card = function
   | [] -> failwith "Empty deck"
