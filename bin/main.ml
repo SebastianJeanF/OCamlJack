@@ -45,7 +45,7 @@ let print_reg_hand player =
   let () = print_string "[" in
   let cards = O.Player.get_hand player in
   let () =
-    for x = 0 to List.length cards - 2 do
+    for x = List.length cards - 1 downto 1 do
       print_string (O.Card.to_string (List.nth cards x) ^ ", ")
     done
   in
@@ -109,7 +109,7 @@ let program () =
   let () = print_endline "" in
   let () = print_string "Welcome to OCamlJack! Press ENTER to begin: " in
   let _ = read_line () in
-  let game = O.Game.(new_game () |> add_player "Test") in
+  let game = O.Game.(new_game () |> add_player "OCamlJack Player") in
   loop game false
 
 let () = program ()

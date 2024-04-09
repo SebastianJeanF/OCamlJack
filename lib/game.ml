@@ -33,7 +33,7 @@ let add_player name game =
   game
 
 let new_game () =
-  let deck = Deck.create_deck () in
+  let deck = Deck.(create_deck () |> shuffle_deck) in
   make_dealer deck
 
 let get_curr_player game = game.players.(0)
@@ -44,6 +44,13 @@ let get_dealer g =
 
 let get_state g = g.state
 
+let update_dealer g =
+  let drawn_card, updated_deck = Deck.draw_card g.deck in
+  let updated_dealer = Player.add_card drawn_card (get_dealer g) in
+  let () = g.deck <- updated_deck in
+  g.players.(Array.length g.players - 1) <- updated_dealer;
+  ()
+
 let update move game =
   if game.state = End then game
   else
@@ -52,9 +59,11 @@ let update move game =
     | "hit" ->
         let drawn_card, updated_deck = Deck.draw_card game.deck in
         let updated_player = Player.add_card drawn_card curr_player in
-        (* let hand_value = Player.get_hand_value updated_player in *)
         let new_state =
-          if Player.is_bust updated_player then Bust else Continue
+          if Player.is_bust updated_player then
+            let () = update_dealer game in
+            Bust
+          else Continue
         in
         let () = game.state <- new_state in
         let () = game.deck <- updated_deck in
@@ -63,6 +72,7 @@ let update move game =
     | "stand" ->
         game.curr_player <- game.curr_player + 1;
         game.state <- End;
+        update_dealer game;
         game
     | _ ->
         game.state <- TryAgain;

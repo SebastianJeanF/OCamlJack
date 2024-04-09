@@ -26,8 +26,8 @@ let shuffle_deck deck =
         let rest = List.filter (fun x -> x <> el) lst in
         el :: shuffle rest
   in
-  let shuffled = shuffle deck in
-  List.iter (fun x -> ignore (Random.int (get_rank x))) shuffled
+  shuffle deck
+(* List.iter (fun x -> ignore (Random.int (get_rank x))) shuffled *)
 
 let draw_card = function
   | [] -> failwith "Empty deck"
