@@ -22,7 +22,7 @@ val new_game : unit -> t
 val add_player : string -> t -> t
 
 (** [update move game] is an updated [game] where the current
-    player made [move]. Requires: [move] is either "Stand" or "Hit" *)
+    player made [move]. Requires: [move] is either "stand" or "hit" *)
 val update : string -> t -> t
 
 (** [get_dealer game] is the dealer of the [game] *)

@@ -22,3 +22,6 @@ let get_hand_value p =
     | h :: t -> Card.get_rank h + helper t
   in
   helper p.hand
+
+let max_value = 21
+let is_bust p = get_hand_value p > max_value

@@ -22,5 +22,9 @@ val add_card : card -> player -> player
 (** [get_hand_value player] is the value of [player]'s hand *)
 val get_hand_value : player -> int 
 
+
+(** [is_bust player] is whether [player] has a bust or not*)
+val is_bust : player -> bool
+
 (** [create name] is a new player called [name]*)
 val create : string -> player

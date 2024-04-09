@@ -36,31 +36,31 @@ let new_game () =
   let deck = Deck.create_deck () in
   make_dealer deck
 
-let get_curr_player game =
-  let idx = game.curr_player in
-  game.players.(idx)
+let get_curr_player game = game.players.(0)
 
 let get_dealer g =
   let idx = Array.length g.players - 1 in
   g.players.(idx)
 
 let get_state g = g.state
-let max_value = 21
 
 let update move game =
   if game.state = End then game
   else
     let curr_player = get_curr_player game in
     match move with
-    | "Hit" ->
+    | "hit" ->
         let drawn_card, updated_deck = Deck.draw_card game.deck in
         let updated_player = Player.add_card drawn_card curr_player in
-        let hand_value = Player.get_hand_value updated_player in
-        let new_state = if hand_value > max_value then Bust else Continue in
+        (* let hand_value = Player.get_hand_value updated_player in *)
+        let new_state =
+          if Player.is_bust updated_player then Bust else Continue
+        in
         let () = game.state <- new_state in
         let () = game.deck <- updated_deck in
+        game.players.(game.curr_player) <- updated_player;
         game
-    | "Stand" ->
+    | "stand" ->
         game.curr_player <- game.curr_player + 1;
         game.state <- End;
         game
@@ -68,5 +68,8 @@ let update move game =
         game.state <- TryAgain;
         game
 
-let get_end_result g =
-  Array.map (fun a -> (a, Player.get_hand_value a <= max_value)) g.players
+let is_victory p g =
+  (not (Player.is_bust p))
+  && Player.get_hand_value p > Player.get_hand_value (get_dealer g)
+
+let get_end_result g = Array.map (fun p -> (p, is_victory p g)) g.players
