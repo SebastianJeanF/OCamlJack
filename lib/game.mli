@@ -1,6 +1,8 @@
-(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), 
-   Sriram Murali (ssm238), Varun Gande (vg262) *)
+(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), Sriram Murali
+   (ssm238), Varun Gande (vg262) *)
 
+(** [dealer_strategy] describes what the dealer does *)
+type dealer_strategy = HitUntil of int
 
 (** [state] describes what part of the game is currently running*)
 type state =
@@ -11,30 +13,45 @@ type state =
   | TryAgain
 
 (** [t] represents information about the game *)
-type t
 
+type t = {
+  mutable players : Player.player array;
+  mutable curr_player : int;
+  mutable deck : Deck.deck;
+  mutable state : state;
+  mutable dealer_strategy : dealer_strategy;
+}
 
-(** [new_game ()] is a newly-initialized game containing just the dealer *)
-val new_game : unit -> t  
-
-(** [add_player player game] is an updated [game] session with [player]
-     added *)
 val add_player : string -> t -> t
+(** [add_player player game] is an updated [game] session with [player] added *)
 
-(** [update move game] is an updated [game] where the current
-    player made [move]. Requires: [move] is either "stand" or "hit" *)
 val update : string -> t -> t
+(** [update move game] is an updated [game] where the current player made
+    [move]. Requires: [move] is either "stand" or "hit" *)
 
+val get_dealer : t -> Player.player
 (** [get_dealer game] is the dealer of the [game] *)
-val get_dealer : t -> Player.player 
 
-(** [get_curr_player game] is the current player of the [game] *)
 val get_curr_player : t -> Player.player
+(** [get_curr_player game] is the current player of the [game] *)
 
-(** [get_state game] is the current state of the [game]*)
 val get_state : t -> state
+(** [get_state game] is the current state of the [game]*)
 
+val get_end_result : t -> (Player.player * bool) array
 (** [get_end_result game] is a reporting of every player in the [game]
     associataed with whether they won their bet or not *)
-val get_end_result : t -> (Player.player * bool) array 
 
+val make_dealer : Deck.deck -> dealer_strategy -> t
+(** [make_dealer deck strategy] creates a new game dealer with the given deck
+    and strategy. *)
+
+val new_game : dealer_strategy -> t
+(** [new_game strategy] creates a new game with the given dealer strategy. *)
+
+val update_dealer : t -> unit
+(** [update_dealer game] updates the dealer's hand according to the game's
+    dealer strategy. *)
+
+val is_victory : Player.player -> t -> bool
+(** [is_victory player game] checks if the given player wins the game. *)

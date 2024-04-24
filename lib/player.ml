@@ -6,6 +6,7 @@ type player = {
   balance : int;
 }
 
+let max_value = 21
 let get_balance p = p.balance
 let get_hand p = p.hand
 let get_name p = p.name
@@ -16,12 +17,20 @@ let add_card card p =
   | { name; hand; balance } -> { name; hand = card :: hand; balance }
 
 let get_hand_value p =
-  let rec helper hand =
+  let rec helper hand value aces_count =
     match hand with
-    | [] -> 0
-    | h :: t -> Card.get_rank h + helper t
+    | [] -> value
+    | h :: t ->
+        let rank = Card.get_rank h in
+        if rank = 1 then
+          let new_value1 = helper t (value + 1) (aces_count + 1) in
+          let new_value2 =
+            if value + 11 <= max_value then helper t (value + 11) aces_count
+            else new_value1
+          in
+          max new_value1 new_value2
+        else helper t (value + min rank 10) aces_count
   in
-  helper p.hand
+  helper p.hand 0 0
 
-let max_value = 21
 let is_bust p = get_hand_value p > max_value

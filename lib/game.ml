@@ -1,5 +1,4 @@
-(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), Sriram Murali
-   (ssm238), Varun Gande (vg262) *)
+type dealer_strategy = HitUntil of int
 
 type state =
   | NewPlayer
@@ -13,12 +12,19 @@ type t = {
   mutable curr_player : int;
   mutable deck : Deck.deck;
   mutable state : state;
+  mutable dealer_strategy : dealer_strategy;
 }
 
-let make_dealer deck =
+let make_dealer deck strategy =
   let card, deck = Deck.draw_card deck in
-  let dealer = Player.(create "Dealer" |> add_card card) in
-  { players = Array.make 1 dealer; curr_player = 0; deck; state = NewPlayer }
+  let dealer = Player.create "Dealer" |> Player.add_card card in
+  {
+    players = Array.make 1 dealer;
+    curr_player = 0;
+    deck;
+    state = NewPlayer;
+    dealer_strategy = strategy;
+  }
 
 let add_player_helper game player =
   let temp = Array.make 1 player in
@@ -27,16 +33,16 @@ let add_player_helper game player =
 
 let add_player name game =
   let card, updated_deck = Deck.draw_card game.deck in
-  let player = Player.(create name |> add_card card) in
+  let player = Player.create name |> Player.add_card card in
   game.deck <- updated_deck;
   add_player_helper game player;
   game
 
-let new_game () =
-  let deck = Deck.(create_deck () |> shuffle_deck) in
-  make_dealer deck
+let new_game strategy =
+  let deck = Deck.create_deck () |> Deck.shuffle_deck in
+  make_dealer deck strategy
 
-let get_curr_player game = game.players.(0)
+let get_curr_player game = game.players.(game.curr_player)
 
 let get_dealer g =
   let idx = Array.length g.players - 1 in
@@ -45,11 +51,18 @@ let get_dealer g =
 let get_state g = g.state
 
 let update_dealer g =
-  let drawn_card, updated_deck = Deck.draw_card g.deck in
-  let updated_dealer = Player.add_card drawn_card (get_dealer g) in
-  let () = g.deck <- updated_deck in
-  g.players.(Array.length g.players - 1) <- updated_dealer;
-  ()
+  let rec hit_until strategy dealer deck =
+    match strategy with
+    | HitUntil limit ->
+        if Player.get_hand_value dealer < limit then
+          let drawn_card, updated_deck = Deck.draw_card deck in
+          let updated_dealer = Player.add_card drawn_card dealer in
+          hit_until strategy updated_dealer updated_deck
+        else dealer
+  in
+  let updated_dealer = hit_until g.dealer_strategy (get_dealer g) g.deck in
+  let idx = Array.length g.players - 1 in
+  g.players.(idx) <- updated_dealer
 
 let update move game =
   if game.state = End then game
@@ -65,8 +78,8 @@ let update move game =
             Bust
           else Continue
         in
-        let () = game.state <- new_state in
-        let () = game.deck <- updated_deck in
+        game.state <- new_state;
+        game.deck <- updated_deck;
         game.players.(game.curr_player) <- updated_player;
         game
     | "stand" ->

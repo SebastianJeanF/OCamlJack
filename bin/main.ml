@@ -108,8 +108,19 @@ let program () =
   let () = print_endline title in
   let () = print_endline "" in
   let () = print_string "Welcome to OCamlJack! Press ENTER to begin: " in
-  let _ = read_line () in
-  let game = O.Game.(new_game () |> add_player "OCamlJack Player") in
+  let name = read_line () in
+  let () =
+    print_string
+      "Please type in the type of AI you want to play(risky, safe, normal): "
+  in
+  let computer = read_line () in
+  let x =
+    match computer with
+    | "risky" -> O.Game.HitUntil 20
+    | "safe" -> O.Game.HitUntil 14
+    | _ -> O.Game.HitUntil 17
+  in
+  let game = O.Game.(new_game x |> add_player name) in
   loop game false
 
 let () = program ()
