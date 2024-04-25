@@ -13,7 +13,6 @@ type state =
   | TryAgain
 
 (** [t] represents information about the game *)
-
 type t = {
   mutable players : Player.player array;
   mutable curr_player : int;
@@ -22,12 +21,18 @@ type t = {
   mutable dealer_strategy : dealer_strategy;
 }
 
+(** [move] represents the availability of moves a user can do*)
+type move =
+  | Hit
+  | Stand
+  | DoubleDown
+
 val add_player : string -> t -> t
 (** [add_player player game] is an updated [game] session with [player] added *)
 
-val update : string -> t -> t
+val update : move -> t -> t
 (** [update move game] is an updated [game] where the current player made
-    [move]. Requires: [move] is either "stand" or "hit" *)
+    [move] *)
 
 val get_dealer : t -> Player.player
 (** [get_dealer game] is the dealer of the [game] *)
@@ -53,5 +58,5 @@ val update_dealer : t -> unit
 (** [update_dealer game] updates the dealer's hand according to the game's
     dealer strategy. *)
 
-val is_victory : Player.player -> t -> bool
-(** [is_victory player game] checks if the given player wins the game. *)
+val has_won : Player.player -> t -> bool
+(** [has_won player game] checks if the given player wins the game. *)

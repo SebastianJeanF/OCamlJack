@@ -7,6 +7,11 @@ type state =
   | End
   | TryAgain
 
+type move =
+  | Hit
+  | Stand
+  | DoubleDown
+
 type t = {
   mutable players : Player.player array;
   mutable curr_player : int;
@@ -29,14 +34,14 @@ let make_dealer deck strategy =
 let add_player_helper game player =
   let temp = Array.make 1 player in
   let updated_array = Array.append temp game.players in
-  game.players <- updated_array
+  game.players <- updated_array;
+  game
 
 let add_player name game =
   let card, updated_deck = Deck.draw_card game.deck in
   let player = Player.create name |> Player.add_card card in
   game.deck <- updated_deck;
-  add_player_helper game player;
-  game
+  add_player_helper game player
 
 let new_game strategy =
   let deck = Deck.create_deck () |> Deck.shuffle_deck in
@@ -45,11 +50,13 @@ let new_game strategy =
 let get_curr_player game = game.players.(game.curr_player)
 
 let get_dealer g =
-  let idx = Array.length g.players - 1 in
-  g.players.(idx)
+  let dealer_idx = Array.length g.players - 1 in
+  g.players.(dealer_idx)
 
 let get_state g = g.state
 
+(** At the end of the game, the dealer needs to be updated with the appropriate
+    amount of cards based on the dealer_strategy *)
 let update_dealer g =
   let rec hit_until strategy dealer deck =
     match strategy with
@@ -61,28 +68,36 @@ let update_dealer g =
         else dealer
   in
   let updated_dealer = hit_until g.dealer_strategy (get_dealer g) g.deck in
-  let idx = Array.length g.players - 1 in
-  g.players.(idx) <- updated_dealer
+  let dealer_idx = Array.length g.players - 1 in
+  g.players.(dealer_idx) <- updated_dealer
 
 let update move game =
   if game.state = End then game
   else
     let curr_player = get_curr_player game in
     match move with
-    | "hit" ->
+    | Hit ->
         let drawn_card, updated_deck = Deck.draw_card game.deck in
         let updated_player = Player.add_card drawn_card curr_player in
+
         let new_state =
+          (* If the current player busts, the Game State becomes Bust if there
+             is at least one more player who needs to play; otherwise it just
+             becomes End *)
           if Player.is_bust updated_player then
-            let () = update_dealer game in
-            Bust
+            let is_last_player =
+              Array.length game.players - 2 == game.curr_player
+            in
+            if is_last_player then End else Bust
           else Continue
         in
+
         game.state <- new_state;
         game.deck <- updated_deck;
         game.players.(game.curr_player) <- updated_player;
+        if new_state == Bust then game.curr_player <- game.curr_player + 1;
         game
-    | "stand" ->
+    | Stand ->
         game.curr_player <- game.curr_player + 1;
         game.state <- End;
         update_dealer game;
@@ -91,8 +106,9 @@ let update move game =
         game.state <- TryAgain;
         game
 
-let is_victory p g =
+(** [has_won p g] is whether player [p] won the game [g] or not *)
+let has_won p g =
   (not (Player.is_bust p))
   && Player.get_hand_value p > Player.get_hand_value (get_dealer g)
 
-let get_end_result g = Array.map (fun p -> (p, is_victory p g)) g.players
+let get_end_result g = Array.map (fun p -> (p, has_won p g)) g.players

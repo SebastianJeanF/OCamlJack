@@ -7,6 +7,8 @@ type player = {
   bet : int;
 }
 
+exception InsufficientBalance
+
 let max_value = 21
 let get_balance p = p.balance
 let get_hand p = p.hand
@@ -34,14 +36,28 @@ let get_hand_value p =
   in
   helper p.hand 0 0
 
-let update_balance is_win = function
+(** [multiply bet factor] is integer [bet] times float [factor], rounded up to
+    nearest integer *)
+let mulitply bet factor =
+  let round_up num = int_of_float (num +. 1.) in
+  round_up (float_of_int bet *. factor)
+
+let update_balance factor = function
   | { name; hand; balance; bet } ->
-      let new_balance = if is_win then balance + (bet * 2) else balance in
+      let new_balance = balance + mulitply bet factor in
       { name; hand; balance = new_balance; bet = 0 }
 
-let place_bet amount = function
+let place_bet bet = function
   | { name; hand; balance; _ } ->
-      let new_balance = balance - amount in
-      { name; hand; balance = new_balance; bet = amount }
+      let new_balance = balance - bet in
+      if new_balance < 0 then raise InsufficientBalance
+      else { name; hand; balance = new_balance; bet }
+
+let update_bet factor = function
+  | { name; hand; balance; bet } ->
+      let new_bet = mulitply bet factor in
+      let new_balance = balance - (new_bet - bet) in
+      if new_balance < 0 then raise InsufficientBalance
+      else { name; hand; balance = new_balance; bet = new_bet }
 
 let is_bust p = get_hand_value p > max_value
