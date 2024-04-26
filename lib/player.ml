@@ -15,6 +15,9 @@ let get_hand p = p.hand
 let get_name p = p.name
 let create name = { name; hand = []; balance = 0; bet = 0 }
 
+let init_balance balance = function
+  | { name; hand; bet; _ } -> { name; hand; balance; bet }
+
 let add_card card p =
   match p with
   | { name; hand; balance; bet } -> { name; hand = card :: hand; balance; bet }

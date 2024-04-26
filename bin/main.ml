@@ -119,29 +119,36 @@ let rec logic_loop g =
     logic_loop g
 
 let introduction () =
-  let () = print_endline title in
-  let () = print_endline "" in
-  let () =
-    print_string
-      "Welcome to OCamlJack! Type in your name and press ENTER to begin: "
-  in
+  print_endline title;
+  print_endline "";
+  print_string
+    "Welcome to OCamlJack! Type in your name and press ENTER to begin: ";
   let name = read_line () in
   let () =
     print_string
       "Please type in the type of AI you want to play(risky, safe, normal): "
   in
   let computer = read_line () in
-  (name, computer)
+
+  let () =
+    (* [TODO]: make while loop to check that person enters a valid
+       integer/natural number *)
+    print_string "Please type in the starting balance for all players: "
+  in
+  let balance = read_line () in
+  (name, int_of_string balance, computer)
 
 let program () =
-  let name, computer = introduction () in
+  let name, balance, computer = introduction () in
   let dealer_strategy =
     match computer with
     | "risky" -> O.Game.HitUntil 20
     | "safe" -> O.Game.HitUntil 14
     | _ -> O.Game.HitUntil 17
   in
-  let game = O.Game.(new_game dealer_strategy |> add_player name) in
+  let game =
+    O.Game.(new_game dealer_strategy |> add_player name |> set_balances balance)
+  in
   logic_loop game
 
 let () = program ()

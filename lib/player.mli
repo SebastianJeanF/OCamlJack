@@ -45,5 +45,9 @@ val get_hand_value : player -> int
 (** [is_bust player] is whether [player] has a bust or not*)
 val is_bust : player -> bool
 
-(** [create name] is a new player called [name]*)
-val create : string -> player
+(** [create name] is a new player called [name] *)
+val create : string  ->  player
+
+(** [init_balance balance] is an updated [player] with their balance
+    initialized to [balance]. Requires: [balance] is a non-negative integer *)
+val init_balance : int -> player -> player

@@ -49,6 +49,14 @@ let new_game strategy =
 
 let get_curr_player game = game.players.(game.curr_player)
 
+let set_balances balance g =
+  (*All non-dealer players will have their balances initialized*)
+  for i = 0 to Array.length g.players - 2 do
+    let player = g.players.(i) in
+    g.players.(i) <- Player.init_balance balance player
+  done;
+  g
+
 let get_dealer g =
   let dealer_idx = Array.length g.players - 1 in
   g.players.(dealer_idx)
@@ -91,7 +99,6 @@ let update move game =
             if is_last_player then End else Bust
           else Continue
         in
-
         game.state <- new_state;
         game.deck <- updated_deck;
         game.players.(game.curr_player) <- updated_player;
@@ -106,7 +113,6 @@ let update move game =
         game.state <- TryAgain;
         game
 
-(** [has_won p g] is whether player [p] won the game [g] or not *)
 let has_won p g =
   (not (Player.is_bust p))
   && Player.get_hand_value p > Player.get_hand_value (get_dealer g)

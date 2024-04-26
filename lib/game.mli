@@ -60,3 +60,9 @@ val update_dealer : t -> unit
 
 val has_won : Player.player -> t -> bool
 (** [has_won player game] checks if the given player wins the game. *)
+
+
+(** [set_balances balance game] is an updated [game] where every
+    player starts with [balance]. Requires: function is only be run before
+    starting the [game]; [balance] is a non-negative integer *)
+val set_balances : int -> t -> t
