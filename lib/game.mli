@@ -28,7 +28,8 @@ type move =
   | DoubleDown
 
 val add_player : string -> t -> t
-(** [add_player player game] is an updated [game] session with [player] added *)
+(** [add_player name game] is an updated [game] session with player [name]
+    added *)
 
 val update : move -> t -> t
 (** [update move game] is an updated [game] where the current player made
@@ -66,3 +67,7 @@ val has_won : Player.player -> t -> bool
     player starts with [balance]. Requires: function is only be run before
     starting the [game]; [balance] is a non-negative integer *)
 val set_balances : int -> t -> t
+
+
+(** [get_players game] is all the non-dealer players registered in the game*)
+(* val get_players : t -> Player.player list *)

@@ -13,12 +13,17 @@ type move =
   | DoubleDown
 
 type t = {
+  (* The right-most player in the players array is the dealer *)
   mutable players : Player.player array;
   mutable curr_player : int;
   mutable deck : Deck.deck;
   mutable state : state;
   mutable dealer_strategy : dealer_strategy;
 }
+
+let get_dealer g =
+  let dealer_idx = Array.length g.players - 1 in
+  g.players.(dealer_idx)
 
 let make_dealer deck strategy =
   let card, deck = Deck.draw_card deck in
@@ -32,9 +37,15 @@ let make_dealer deck strategy =
   }
 
 let add_player_helper game player =
-  let temp = Array.make 1 player in
-  let updated_array = Array.append temp game.players in
-  game.players <- updated_array;
+  (* We want to insert this new player at the SECOND to last spot in the players
+     array. Example: [A, B, Dealer] -> add C -> [A, B, C, Dealer] *)
+  let len = Array.length game.players in
+  let updated_players = Array.make (len + 1) player in
+  if len > 1 then Array.blit game.players 0 updated_players 0 (len - 1);
+
+  (* We ensure that dealer is still last *)
+  updated_players.(len) <- get_dealer game;
+  game.players <- updated_players;
   game
 
 let add_player name game =
@@ -56,10 +67,6 @@ let set_balances balance g =
     g.players.(i) <- Player.init_balance balance player
   done;
   g
-
-let get_dealer g =
-  let dealer_idx = Array.length g.players - 1 in
-  g.players.(dealer_idx)
 
 let get_state g = g.state
 
@@ -90,8 +97,8 @@ let update move game =
 
         let new_state =
           (* If the current player busts, the Game State becomes Bust if there
-             is at least one more player who needs to play; otherwise it just
-             becomes End *)
+             is at least one more player who needs to play; otherwise it becomes
+             End *)
           if Player.is_bust updated_player then
             let is_last_player =
               Array.length game.players - 2 == game.curr_player
@@ -105,9 +112,12 @@ let update move game =
         if new_state == Bust then game.curr_player <- game.curr_player + 1;
         game
     | Stand ->
+        let is_last_player =
+          (* Last non-dealer player at index (len - 2) *)
+          Array.length game.players - 2 == game.curr_player
+        in
+        if is_last_player then game.state <- End else game.state <- NewPlayer;
         game.curr_player <- game.curr_player + 1;
-        game.state <- End;
-        update_dealer game;
         game
     | _ ->
         game.state <- TryAgain;
@@ -117,4 +127,6 @@ let has_won p g =
   (not (Player.is_bust p))
   && Player.get_hand_value p > Player.get_hand_value (get_dealer g)
 
-let get_end_result g = Array.map (fun p -> (p, has_won p g)) g.players
+let get_end_result g =
+  update_dealer g;
+  Array.map (fun p -> (p, has_won p g)) g.players

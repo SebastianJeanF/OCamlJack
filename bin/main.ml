@@ -85,7 +85,9 @@ let print_game_state g =
   match get_state g with
   | NewPlayer | Continue -> print_move_result turn_message g
   | TryAgain -> print_move_result try_again_message g
-  | Bust -> print_move_result player_bust_message g
+  | Bust ->
+      print_endline player_bust_message;
+      print_move_result turn_message g
   | End -> print_round_end g
 
 let rec get_user_move g =
@@ -109,46 +111,95 @@ let is_game_over g =
   | O.Game.End -> true
   | _ -> false
 
-let rec logic_loop g =
+(** TODO: turn_loop returns the game, ask user if they want to play again *)
+let rec turn_loop g =
   let () = print_game_state g in
   if is_game_over g then ()
   else
+    (* [TODO]: When computer player module is implemented, get_computer_move
+       should be added *)
     let move = get_user_move g in
     let g = O.Game.update move g in
     let () = print_newlines 10 in
-    logic_loop g
+    turn_loop g
+
+let rec init_players game =
+  let is_player = ref false in
+  let is_valid_input = ref false in
+
+  (* Get Player Type *)
+  while not !is_valid_input do
+    print_endline "Is this player a human or computer?";
+    print_string "Please type 'h' for human or 'c' for computer: ";
+    let input = read_line () in
+    match input with
+    | "h" | "c" ->
+        if input = "h" then is_player := true;
+        is_valid_input := true
+    | _ ->
+        print_newlines 2;
+        print_endline "**Invalid Input**"
+  done;
+
+  (* Get Player Name *)
+  let updated_game =
+    if !is_player then
+      let _ = print_string "What name will you go by? " in
+      let name = read_line () in
+      O.Game.add_player name game
+    else
+      (* For now, a computer player is just a human with name "Computer" lol *)
+      O.Game.add_player "* Computer *" game
+  in
+
+  (* Repeat if Adding New Player *)
+  let is_init_done = ref false in
+  let all_players_added_game = ref updated_game in
+  while not !is_init_done do
+    print_endline "Add another player? ";
+    print_string "Please type 'yes' or 'no': ";
+    let input = read_line () in
+    match input with
+    | "yes" ->
+        print_newlines 2;
+        all_players_added_game := init_players updated_game;
+        is_init_done := true
+    | "no" -> is_init_done := true
+    | _ ->
+        print_newlines 2;
+        print_endline "**Invalid Input**"
+  done;
+  !all_players_added_game
 
 let introduction () =
   print_endline title;
   print_endline "";
+  print_string "Welcome to OCamlJack! Press ENTER to begin: ";
+  let _ = read_line () in
   print_string
-    "Welcome to OCamlJack! Type in your name and press ENTER to begin: ";
-  let name = read_line () in
-  let () =
-    print_string
-      "Please type in the type of AI you want to play(risky, safe, normal): "
+    "Please type in the type of dealer AI you want to play(risky, safe, \
+     normal): ";
+  let input = read_line () in
+  let dealer_strategy =
+    match input with
+    | "risky" -> O.Game.HitUntil 20
+    | "safe" -> O.Game.HitUntil 14
+    | _ -> O.Game.HitUntil 17
   in
-  let computer = read_line () in
-
+  let game = O.Game.(new_game dealer_strategy) in
+  let players_added_game = init_players game in
   let () =
     (* [TODO]: make while loop to check that person enters a valid
        integer/natural number *)
     print_string "Please type in the starting balance for all players: "
   in
-  let balance = read_line () in
-  (name, int_of_string balance, computer)
+  let balance = int_of_string (read_line ()) in
+  let fully_init_game = O.Game.set_balances balance players_added_game in
+  fully_init_game
 
+(* [TODO] Get bets from each player *)
 let program () =
-  let name, balance, computer = introduction () in
-  let dealer_strategy =
-    match computer with
-    | "risky" -> O.Game.HitUntil 20
-    | "safe" -> O.Game.HitUntil 14
-    | _ -> O.Game.HitUntil 17
-  in
-  let game =
-    O.Game.(new_game dealer_strategy |> add_player name |> set_balances balance)
-  in
-  logic_loop game
+  let new_game = introduction () in
+  turn_loop new_game
 
 let () = program ()
