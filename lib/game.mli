@@ -12,7 +12,6 @@ type state =
   | End
   | TryAgain
 
-(** [t] represents information about the game *)
 type t = {
   mutable players : Player.player array;
   mutable curr_player : int;
@@ -20,6 +19,7 @@ type t = {
   mutable state : state;
   mutable dealer_strategy : dealer_strategy;
 }
+(** [t] represents information about the game *)
 
 (** [move] represents the availability of moves a user can do*)
 type move =
@@ -28,12 +28,10 @@ type move =
   | DoubleDown
 
 val add_player : string -> t -> t
-(** [add_player name game] is an updated [game] session with player [name]
-    added *)
+(** [add_player name game] is an updated [game] session with player [name] added *)
 
 val update : move -> t -> t
-(** [update move game] is an updated [game] where the current player made
-    [move] *)
+(** [update move game] is an updated [game] where the current player made [move] *)
 
 val get_dealer : t -> Player.player
 (** [get_dealer game] is the dealer of the [game] *)
@@ -62,12 +60,10 @@ val update_dealer : t -> unit
 val has_won : Player.player -> t -> bool
 (** [has_won player game] checks if the given player wins the game. *)
 
-
-(** [set_balances balance game] is an updated [game] where every
-    player starts with [balance]. Requires: function is only be run before
-    starting the [game]; [balance] is a non-negative integer *)
 val set_balances : int -> t -> t
-
+(** [set_balances balance game] is an updated [game] where every player starts
+    with [balance]. Requires: function is only be run before starting the
+    [game]; [balance] is a non-negative integer *)
 
 (** [get_players game] is all the non-dealer players registered in the game*)
 (* val get_players : t -> Player.player list *)
