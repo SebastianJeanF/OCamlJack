@@ -9,9 +9,6 @@ let title =
   \ | |_| | |__| (_| | | | | | | | | |_| | (_| | (__|   <|_|\n\
   \  \\___/ \\____\\__,_|_| |_| |_|_|  \\___/ \\__,_|\\___|_|\\_(_)"
 
-(* let print_card c = let rank, suit = O.Card.(get_rank c, get_suit c) in match
-   suit with *)
-
 let turn_message =
   "What move do you want to make next?\n (Type 'stand' or 'hit'): "
 
@@ -32,24 +29,59 @@ let print_newlines n =
     print_endline ""
   done
 
+let print_card card =
+  let rank, suit = O.Card.(get_rank card, get_suit card) in
+  let rank_str =
+    match rank with
+    | 1 -> " A "
+    | 11 -> " J "
+    | 12 -> " Q "
+    | 13 -> " K "
+    | _ -> " " ^ string_of_int rank ^ " "
+  in
+  let suit_str, suit_color =
+    match suit with
+    | Hearts | Diamonds ->
+        let suit_char =
+          match suit with
+          | Hearts -> "♥"
+          | Diamonds -> "♦"
+          | _ -> ""
+        in
+        (suit_char, "\027[31m")
+    | Clubs | Spades ->
+        let suit_char =
+          match suit with
+          | Clubs -> "♣"
+          | Spades -> "♠"
+          | _ -> ""
+        in
+        (suit_char, "\027[30m")
+  in
+  print_string "┌───┐";
+  print_endline "";
+  print_string ("│" ^ rank_str ^ "│");
+  print_endline "";
+  print_string ("│ " ^ suit_color ^ suit_str ^ "\027[0m │");
+  print_endline "";
+  print_string "└───┘";
+  print_newline ()
+
 let print_mystery_hand dealer =
   let () = print_endline (O.Player.get_name dealer) in
-  let () = print_string "[" in
   let cards = O.Player.get_hand dealer in
-  let () = print_string (O.Card.to_string (List.hd cards) ^ ", ") in
-  let () = print_endline "?]" in
+  print_card (List.hd cards);
+  print_string "┌───┐";
+  print_endline "";
+  print_string "│ ? │";
+  print_endline "";
+  print_string "└───┘";
   print_endline ("Value: " ^ string_of_int (O.Player.get_hand_value dealer))
 
 let print_reg_hand player =
   let () = print_endline (O.Player.get_name player) in
-  let () = print_string "[" in
   let cards = O.Player.get_hand player in
-  let () =
-    for x = List.length cards - 1 downto 1 do
-      print_string (O.Card.to_string (List.nth cards x) ^ ", ")
-    done
-  in
-  let () = print_endline (O.Card.to_string (List.hd cards) ^ "]") in
+  List.iter print_card cards;
   print_endline ("Value: " ^ string_of_int (O.Player.get_hand_value player))
 
 let print_round_end g =
