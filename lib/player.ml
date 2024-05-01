@@ -39,13 +39,13 @@ let get_hand_value p =
   in
   helper p.hand 0 0
 
-(** [multiply bet factor] is integer [bet] times float [factor], rounded up to
-    nearest integer *)
+(** [multiply bet factor] is (integer [bet]) times (float [factor]), rounded up
+    to nearest integer *)
 let mulitply bet factor =
   let round_up num = int_of_float (num +. 1.) in
   round_up (float_of_int bet *. factor)
 
-let update_balance factor = function
+let win_bet factor = function
   | { name; hand; balance; bet } ->
       let new_balance = balance + mulitply bet factor in
       { name; hand; balance = new_balance; bet = 0 }

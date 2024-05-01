@@ -14,7 +14,7 @@ type state =
 
 type t = {
   mutable players : Player.player array;
-  mutable curr_player : int;
+  mutable curr_player_i : int;
   mutable deck : Deck.deck;
   mutable state : state;
   mutable dealer_strategy : dealer_strategy;
@@ -42,16 +42,16 @@ val get_curr_player : t -> Player.player
 val get_state : t -> state
 (** [get_state game] is the current state of the [game]*)
 
-val get_end_result : t -> (Player.player * bool) array
-(** [get_end_result game] is a reporting of every player in the [game]
+val compute_end_result : t -> (Player.player * bool) array
+(** [compute_end_result game] is a reporting of every player in the [game]
     associataed with whether they won their bet or not *)
 
 val make_dealer : Deck.deck -> dealer_strategy -> t
 (** [make_dealer deck strategy] creates a new game dealer with the given deck
     and strategy. *)
 
-val new_game : dealer_strategy -> t
-(** [new_game strategy] creates a new game with the given dealer strategy. *)
+val init_game : dealer_strategy -> t
+(** [init_game strategy] creates a new game with the given dealer strategy. *)
 
 val update_dealer : t -> unit
 (** [update_dealer game] updates the dealer's hand according to the game's
@@ -65,5 +65,14 @@ val set_balances : int -> t -> t
     with [balance]. Requires: function is only be run before starting the
     [game]; [balance] is a non-negative integer *)
 
-(** [get_players game] is all the non-dealer players registered in the game*)
-(* val get_players : t -> Player.player list *)
+
+val place_bet : int  -> t ->  t
+(** [place_bet bet game] is an updated [game] where the current player places
+    a bet of [bet], incrementing the current player. 
+    Requires: function is only run before starting a new game, and [bet] is a 
+    non-negative integer. Raises: [InsufficientBalance] if 
+    current player cannot afford balance *) 
+
+val start_game : t -> t
+(** [start_game game] is an updated [game] initialized to begin a new game *)
+

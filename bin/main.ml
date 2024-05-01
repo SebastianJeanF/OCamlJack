@@ -9,6 +9,9 @@ let title =
   \ | |_| | |__| (_| | | | | | | | | |_| | (_| | (__|   <|_|\n\
   \  \\___/ \\____\\__,_|_| |_| |_|_|  \\___/ \\__,_|\\___|_|\\_(_)"
 
+(* let print_card c = let rank, suit = O.Card.(get_rank c, get_suit c) in match
+   suit with *)
+
 let turn_message =
   "What move do you want to make next?\n (Type 'stand' or 'hit'): "
 
@@ -86,11 +89,13 @@ let print_reg_hand player =
 
 let print_round_end g =
   let open O.Game in
+  let players = compute_end_result g in
   print_reg_hand (get_dealer g);
-  let players = get_end_result g in
+
+  (* Print result for each players*)
   for i = Array.length players - 2 downto 0 do
     print_newlines 2;
-    let player, isWin = (get_end_result g).(i) in
+    let player, isWin = players.(i) in
     let message =
       if not isWin then
         if O.Player.is_bust player then player_bust_message
@@ -99,7 +104,8 @@ let print_round_end g =
       else player_win_message
     in
     print_reg_hand player;
-    print_endline message
+    print_endline message;
+    print_endline ("Balance: " ^ string_of_int (O.Player.get_balance player))
   done
 
 let print_move_result message g =
@@ -143,10 +149,9 @@ let is_game_over g =
   | O.Game.End -> true
   | _ -> false
 
-(** TODO: turn_loop returns the game, ask user if they want to play again *)
 let rec turn_loop g =
   let () = print_game_state g in
-  if is_game_over g then ()
+  if is_game_over g then g
   else
     (* [TODO]: When computer player module is implemented, get_computer_move
        should be added *)
@@ -154,6 +159,8 @@ let rec turn_loop g =
     let g = O.Game.update move g in
     let () = print_newlines 10 in
     turn_loop g
+
+let global_num_players = ref 0
 
 let rec init_players game =
   let is_player = ref false in
@@ -183,6 +190,7 @@ let rec init_players game =
       (* For now, a computer player is just a human with name "Computer" lol *)
       O.Game.add_player "* Computer *" game
   in
+  global_num_players := !global_num_players + 1;
 
   (* Repeat if Adding New Player *)
   let is_init_done = ref false in
@@ -218,20 +226,100 @@ let introduction () =
     | "safe" -> O.Game.HitUntil 14
     | _ -> O.Game.HitUntil 17
   in
-  let game = O.Game.(new_game dealer_strategy) in
+  let game = O.Game.(init_game dealer_strategy) in
   let players_added_game = init_players game in
-  let () =
-    (* [TODO]: make while loop to check that person enters a valid
-       integer/natural number *)
-    print_string "Please type in the starting balance for all players: "
+
+  let rec init_balances () =
+    let error_message = "** Please enter a valid positive integer! **" in
+    try
+      print_newlines 1;
+      print_string "Please type in the starting balance for all players: ";
+      let num = int_of_string (read_line ()) in
+      if num < 1 then
+        let () =
+          print_newlines 1;
+          print_endline error_message
+        in
+        init_balances ()
+      else num
+    with Failure _ ->
+      print_newlines 1;
+      print_endline error_message;
+      init_balances ()
   in
-  let balance = int_of_string (read_line ()) in
+  let balance = init_balances () in
   let fully_init_game = O.Game.set_balances balance players_added_game in
   fully_init_game
 
-(* [TODO] Get bets from each player *)
+let place_bets game =
+  (* One player places bet *)
+  let place_bet game =
+    let curr_player = O.Game.get_curr_player game in
+    let name = O.Player.get_name curr_player in
+    print_newlines 1;
+    print_endline (name ^ ", it's your turn to bet!");
+    print_endline
+      ("Your current balance is: "
+      ^ string_of_int (O.Player.get_balance curr_player));
+    print_endline "Please type in the amount you would like to bet: ";
+    let bet = int_of_string (read_line ()) in
+    O.Game.place_bet bet game
+  in
+
+  (* Ask again for player to place bet if error occurs *)
+  let rec place_bet_loop game =
+    try place_bet game with
+    | Failure _ ->
+        (* Likely, they incorrectly bet a non-numeric value *)
+        let () =
+          print_newlines 1;
+          print_endline "** Please enter a valid integer! **"
+        in
+        place_bet_loop game
+    | O.Player.InsufficientBalance ->
+        let () =
+          print_newlines 1;
+          print_endline "** You don't have enough money to make that bet! **"
+        in
+        place_bet_loop game
+  in
+
+  (* Get bets from all players *)
+  let rec place_all_bets_helper num game =
+    match num with
+    | 0 -> game
+    | _ ->
+        let updated_game = place_bet_loop game in
+        place_all_bets_helper (num - 1) updated_game
+  in
+  place_all_bets_helper !global_num_players game
+
 let program () =
-  let new_game = introduction () in
-  turn_loop new_game
+  let init_game = introduction () in
+
+  let game_loop new_game =
+    let running_game = place_bets new_game |> O.Game.start_game in
+    let _ (* finished_game *) = turn_loop running_game in
+    let _ = read_line () in
+    let rec repeat_game () =
+      print_newlines 2;
+      print_endline "Would you like to play again? ";
+      print_endline "Please type 'yes' or 'no': ";
+      let input = read_line () in
+      match input with
+      | "yes" ->
+          (* game_loop finished_game *)
+          (* [TODO] Add appropriate clean up function in Game module/Player
+             module (like clearing hands), so the game can start over properly
+             without bugs. *)
+          exit 0
+      | "no" -> exit 0
+      | _ ->
+          print_endline "**Invalid Input**";
+          repeat_game ()
+    in
+    repeat_game ()
+  in
+  game_loop init_game
 
 let () = program ()

@@ -27,11 +27,11 @@ val update_bet : float -> player -> player
     if [player] cannot afford the increased bet out of their balance. Requires:
     [factor] is 1 or greater *)
 
-val update_balance : float -> player -> player
-(** [update_balance factor player] is an updated [player] who won a [factor]
+val win_bet : float -> player -> player
+(** [win_bet factor player] is an updated [player] who won a [factor]
     times their bet (rounded up to nearest whole number), their balance
     increasing by that amount; [player]'s bet resets to 0. Example:
-    Player.balance = 4, Player.bet = 3 -> update_balance 2. player ->
+    Player.balance = 4, Player.bet = 3 -> win_bet 2. player ->
     Player.balance = 4 + 2*3, Player.bet = 0 *)
 
 val add_card : card -> player -> player
