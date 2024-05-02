@@ -73,3 +73,7 @@ val place_bet : int -> t -> t
 val start_game : t -> t
 (** [start_game game] is an updated [game] where the game is started. Requires:
     [game] is not currently running; at least 1 non-human player is in [game]. *)
+
+
+(* [TODO]: get_players function to get list of all players in 
+   game -> Used for testing suite *)

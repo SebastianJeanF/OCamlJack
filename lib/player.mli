@@ -41,8 +41,8 @@ val place_bet : int -> player -> player
     in a game, resulting in [player]'s balance decreasing by [bet]. Raises:
     [InsufficientBalance] if [bet] is less than [player]'s balance *)
 
-val update_bet : float -> player -> player
-(** [update_bet factor player] is an updated [player] whose bet increased by
+val multiply_bet : float -> player -> player
+(** [multiply_bet factor player] is an updated [player] whose bet increased by
     [factor] (rounded up to nearest whole number). Raises: [InsufficientBalance]
     if [player] cannot afford the increased bet out of their balance. Requires:
     [factor] is 1 or greater *)

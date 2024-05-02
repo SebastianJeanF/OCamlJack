@@ -114,9 +114,29 @@ let update move game =
         if is_last_player then game.state <- End else game.state <- NewPlayer;
         game.curr_player_idx <- game.curr_player_idx + 1;
         game
-    | _ ->
-        game.state <- TryAgain;
-        game
+    | DoubleDown -> (
+        try
+          let drawn_card, updated_deck = Deck.draw_card game.deck in
+          let updated_player = Player.add_card drawn_card curr_player in
+          let updated_player = Player.multiply_bet 2. updated_player in
+          game.players.(game.curr_player_idx) <- updated_player;
+          game.deck <- updated_deck;
+
+          let is_last_player =
+            Array.length game.players - 2 == game.curr_player_idx
+          in
+          let new_state =
+            if is_last_player then End
+            else if Player.is_bust updated_player then Bust
+            else NewPlayer
+          in
+
+          game.state <- new_state;
+          game.curr_player_idx <- game.curr_player_idx + 1;
+          game
+        with Player.InsufficientBalance ->
+          game.state <- TryAgain;
+          game)
 
 let has_won p g =
   (not (Player.is_bust p))

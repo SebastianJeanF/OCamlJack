@@ -13,9 +13,13 @@ let title =
    suit with *)
 
 let turn_message =
-  "What move do you want to make next?\n (Type 'stand' or 'hit'): "
+  "What move do you want to make next?\n\
+  \ (Type 'stand', 'hit', or 'double down'): "
 
 let try_again_message = "Invalid move. Valid moves are 'stand' or 'hit'"
+
+let no_double_down_message =
+  "You can't double down! You don't have enough tokens!"
 
 let player_bust_message =
   "You lost! Your hand totaled higher than 21 and you busted!"
@@ -122,7 +126,10 @@ let print_game_state g =
   let open O.Game in
   match get_state g with
   | NewPlayer | Continue -> print_move_result turn_message g
-  | TryAgain -> print_move_result try_again_message g
+  | TryAgain ->
+      (* TryAgain only happens when a player attemps to DoubleDown, but don't
+         have enough tokens *)
+      print_move_result (no_double_down_message ^ "\n" ^ turn_message) g
   | Bust ->
       print_endline player_bust_message;
       print_move_result turn_message g

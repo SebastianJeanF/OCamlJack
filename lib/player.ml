@@ -47,9 +47,8 @@ let mulitply bet factor =
 
 let win_bet factor = function
   | { name; hand; balance; bet } ->
-      (* I'm not sure why, but the new_balance is always 1 too big, so I'm
-         subtracting by 1 *)
-      let new_balance = balance + mulitply bet factor - 1 in
+      (* [TODO] Fix win_bet, appears to be a off-by-one error with balance *)
+      let new_balance = balance + mulitply bet factor in
       { name; hand; balance = new_balance; bet = 0 }
 
 let place_bet bet = function
@@ -58,7 +57,7 @@ let place_bet bet = function
       if new_balance < 0 then raise InsufficientBalance
       else { name; hand; balance = new_balance; bet }
 
-let update_bet factor = function
+let multiply_bet factor = function
   | { name; hand; balance; bet } ->
       let new_bet = mulitply bet factor in
       let new_balance = balance - (new_bet - bet) in
