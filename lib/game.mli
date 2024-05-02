@@ -14,7 +14,7 @@ type state =
 
 type t = {
   mutable players : Player.player array;
-  mutable curr_player_i : int;
+  mutable curr_player_idx : int;
   mutable deck : Deck.deck;
   mutable state : state;
   mutable dealer_strategy : dealer_strategy;

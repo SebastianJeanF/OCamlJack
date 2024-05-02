@@ -297,28 +297,23 @@ let place_bets game =
 let program () =
   let init_game = introduction () in
 
-  let game_loop new_game =
+  let rec game_loop new_game =
     let running_game = place_bets new_game |> O.Game.start_game in
-    let _ (* finished_game *) = turn_loop running_game in
+    let finished_game = turn_loop running_game in
     let _ = read_line () in
-    let rec repeat_game () =
+    let rec ask_repeat_game () =
       print_newlines 2;
       print_endline "Would you like to play again? ";
       print_endline "Please type 'yes' or 'no': ";
       let input = read_line () in
       match input with
-      | "yes" ->
-          (* game_loop finished_game *)
-          (* [TODO] Add appropriate clean up function in Game module/Player
-             module (like clearing hands), so the game can start over properly
-             without bugs. *)
-          exit 0
+      | "yes" -> game_loop finished_game
       | "no" -> exit 0
       | _ ->
           print_endline "**Invalid Input**";
-          repeat_game ()
+          ask_repeat_game ()
     in
-    repeat_game ()
+    ask_repeat_game ()
   in
   game_loop init_game
 

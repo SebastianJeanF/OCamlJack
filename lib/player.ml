@@ -64,3 +64,4 @@ let update_bet factor = function
       else { name; hand; balance = new_balance; bet = new_bet }
 
 let is_bust p = get_hand_value p > max_value
+let clear_hand p = { p with hand = [] }

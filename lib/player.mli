@@ -49,3 +49,6 @@ val create : string -> player
 val init_balance : int -> player -> player
 (** [init_balance balance] is an updated [player] with their balance initialized
     to [balance]. Requires: [balance] is a non-negative integer *)
+
+val clear_hand : player -> player
+(** [clear_hand player] is an updated [player] with an empty hand *)
