@@ -7,6 +7,12 @@ type player
 
 exception InsufficientBalance
 
+val create : string -> player
+(** [create name] is a new player called [name] *)
+
+val add_card : card -> player -> player
+(** [add_card card player] is a [player] given an additional [card] *)
+
 val get_balance : player -> int
 (** [get_balance player] is the token balance of [player] *)
 
@@ -15,6 +21,20 @@ val get_hand : player -> card list
 
 val get_name : player -> string
 (** [get_name player] is the name of [player] *)
+
+val get_hand_value : player -> int
+(** [get_hand_value player] is the value of [player]'s hand *)
+
+
+val clear_hand : player -> player
+(** [clear_hand player] is an updated [player] with an empty hand *)
+
+val is_bust : player -> bool
+(** [is_bust player] is whether [player] has a bust or not*)
+
+val init_balance : int -> player -> player
+(** [init_balance balance] is an updated [player] with their balance initialized
+    to [balance]. Requires: [balance] is a non-negative integer *)
 
 val place_bet : int -> player -> player
 (** [place_bet bet player] is an updated [player] who placed a bet value [bet]
@@ -33,22 +53,3 @@ val win_bet : float -> player -> player
     increasing by that amount; [player]'s bet resets to 0. Example:
     Player.balance = 4, Player.bet = 3 -> win_bet 2. player ->
     Player.balance = 4 + 2*3, Player.bet = 0 *)
-
-val add_card : card -> player -> player
-(** [add_card card player] is a [player] given an additional [card] *)
-
-val get_hand_value : player -> int
-(** [get_hand_value player] is the value of [player]'s hand *)
-
-val is_bust : player -> bool
-(** [is_bust player] is whether [player] has a bust or not*)
-
-val create : string -> player
-(** [create name] is a new player called [name] *)
-
-val init_balance : int -> player -> player
-(** [init_balance balance] is an updated [player] with their balance initialized
-    to [balance]. Requires: [balance] is a non-negative integer *)
-
-val clear_hand : player -> player
-(** [clear_hand player] is an updated [player] with an empty hand *)

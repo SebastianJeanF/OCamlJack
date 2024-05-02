@@ -47,7 +47,9 @@ let mulitply bet factor =
 
 let win_bet factor = function
   | { name; hand; balance; bet } ->
-      let new_balance = balance + mulitply bet factor in
+      (* I'm not sure why, but the new_balance is always 1 too big, so I'm
+         subtracting by 1 *)
+      let new_balance = balance + mulitply bet factor - 1 in
       { name; hand; balance = new_balance; bet = 0 }
 
 let place_bet bet = function

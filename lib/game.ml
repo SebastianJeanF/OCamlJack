@@ -25,9 +25,9 @@ let get_dealer g =
   let dealer_idx = Array.length g.players - 1 in
   g.players.(dealer_idx)
 
-let make_dealer deck strategy =
-  let card, deck = Deck.draw_card deck in
-  let dealer = Player.create "Dealer" |> Player.add_card card in
+let init_game strategy =
+  let deck = Deck.create_deck () |> Deck.shuffle_deck in
+  let dealer = Player.create "Dealer" in
   {
     players = Array.make 1 dealer;
     curr_player_idx = 0;
@@ -35,10 +35,6 @@ let make_dealer deck strategy =
     state = End;
     dealer_strategy = strategy;
   }
-
-let init_game strategy =
-  let deck = Deck.create_deck () |> Deck.shuffle_deck in
-  make_dealer deck strategy
 
 let add_player_helper game player =
   (* We want to insert this new player at the SECOND to last spot in the players
@@ -53,9 +49,7 @@ let add_player_helper game player =
   game
 
 let add_player name game =
-  let card, updated_deck = Deck.draw_card game.deck in
-  let player = Player.create name |> Player.add_card card in
-  game.deck <- updated_deck;
+  let player = Player.create name in
   add_player_helper game player
 
 let get_curr_player game = game.players.(game.curr_player_idx)
@@ -146,23 +140,27 @@ let compute_end_result g =
   Array.map (fun p -> (p, has_won p g)) g.players
 
 let place_bet amount g =
-  let curr_player = get_curr_player g in
-  if curr_player = get_dealer g then g
+  if g.state <> End then g
   else
     let curr_player = get_curr_player g in
-    let updated_player = Player.place_bet amount curr_player in
-    g.players.(g.curr_player_idx) <- updated_player;
-    g.curr_player_idx <- g.curr_player_idx + 1;
-    g
+    if curr_player = get_dealer g then g
+    else
+      let curr_player = get_curr_player g in
+      let updated_player = Player.place_bet amount curr_player in
+      g.players.(g.curr_player_idx) <- updated_player;
+      g.curr_player_idx <- g.curr_player_idx + 1;
+      g
 
 (* [TODO] Make start_game function that changes game state from End to
    NewPlayer, and sets curr_player to equal 0; Check if there is at least one
    non-dealer player in the game *)
 
 let clear_hands g =
-  let updated_players = Array.map (fun p -> Player.clear_hand p) g.players in
-  g.players <- updated_players;
-  g
+  if g.state <> End then g
+  else
+    let updated_players = Array.map (fun p -> Player.clear_hand p) g.players in
+    g.players <- updated_players;
+    g
 
 let deal_hands g =
   (* All non-dealer players are handed two cards*)
@@ -181,7 +179,9 @@ let deal_hands g =
   g
 
 let start_game g =
-  g.deck <- Deck.(create_deck () |> shuffle_deck);
-  g.state <- NewPlayer;
-  g.curr_player_idx <- 0;
-  clear_hands g |> deal_hands
+  if g.state <> End then g
+  else
+    let () = g.deck <- Deck.(create_deck () |> shuffle_deck) in
+    g.state <- NewPlayer;
+    g.curr_player_idx <- 0;
+    clear_hands g |> deal_hands
