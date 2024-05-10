@@ -144,6 +144,86 @@ let test_get_state _ =
   let game = init_game (HitUntil 17) in
   assert_equal (get_state game) End
 
+(* Test cases for get_balance *)
+let test_get_balance _ =
+  let player = Player.create "Alice" in
+  let player_with_balance = Player.init_balance 100 player in
+  assert_equal 100 (Player.get_balance player_with_balance)
+
+(* Test cases for get_hand *)
+let test_get_hand _ =
+  let player = Player.create "Bob" in
+  let card1 = Card.create 1 Card.Spades in
+  let card2 = Card.create 13 Card.Hearts in
+  let player_with_cards =
+    Player.add_card card2 (Player.add_card card1 player)
+  in
+  assert_equal [ card2; card1 ] (Player.get_hand player_with_cards)
+
+(* Test cases for get_name *)
+let test_get_name _ =
+  let player = Player.create "Charlie" in
+  assert_equal "Charlie" (Player.get_name player)
+
+(* Test cases for init_balance *)
+let test_init_balance _ =
+  let player = Player.create "Eve" in
+  let player_with_balance = Player.init_balance 1000 player in
+  assert_equal 1000 (Player.get_balance player_with_balance)
+
+(* Test cases for add_card *)
+let test_add_card _ =
+  let player = Player.create "Frank" in
+  let card = Card.create 5 Card.Diamonds in
+  let player_with_card = Player.add_card card player in
+  assert_equal [ card ] (Player.get_hand player_with_card)
+
+(* Test cases for get_hand_value *)
+let test_get_hand_value _ =
+  let card1 = Card.create 2 Card.Spades in
+  let card2 = Card.create 3 Card.Hearts in
+  let card3 = Card.create 5 Card.Clubs in
+  let player = Player.create "Grace" in
+  let player_with_cards =
+    Player.add_card card3 (Player.add_card card2 (Player.add_card card1 player))
+  in
+  assert_equal 10 (Player.get_hand_value player_with_cards)
+
+(* Test cases for place_bet *)
+let test_place_bet _ =
+  let player = Player.create "Ivy" in
+  let player_with_balance = Player.init_balance 100 player in
+  assert_raises Player.InsufficientBalance (fun () ->
+      Player.place_bet 101 player_with_balance);
+  let player_with_bet = Player.place_bet 50 player_with_balance in
+  assert_equal 50 (Player.get_balance player_with_bet)
+
+(* Test cases for is_bust *)
+let test_is_bust _ =
+  let card1 = Card.create 1 Card.Spades in
+  let card2 = Card.create 13 Card.Hearts in
+  let card3 = Card.create 10 Card.Clubs in
+  let player = Player.create "Kate" in
+  let player_with_cards =
+    Player.add_card card3 (Player.add_card card2 (Player.add_card card1 player))
+  in
+  assert_equal false (Player.is_bust player_with_cards);
+  let player_with_cards2 =
+    Player.add_card (Card.create 5 Card.Diamonds) player_with_cards
+  in
+  assert_equal true (Player.is_bust player_with_cards2)
+
+(* Test cases for clear_hand *)
+let test_clear_hand _ =
+  let player = Player.create "Liam" in
+  let card1 = Card.create 1 Card.Spades in
+  let card2 = Card.create 13 Card.Hearts in
+  let player_with_cards =
+    Player.add_card card2 (Player.add_card card1 player)
+  in
+  let player_with_clear_hand = Player.clear_hand player_with_cards in
+  assert_equal [] (Player.get_hand player_with_clear_hand)
+
 let suite =
   "test_suite"
   >::: [
@@ -162,6 +242,15 @@ let suite =
          "test_get_dealer" >:: test_get_dealer;
          "test_set_balances" >:: test_set_balances;
          "test_get_state" >:: test_get_state;
+         "test_get_balance" >:: test_get_balance;
+         "test_get_hand" >:: test_get_hand;
+         "test_get_name" >:: test_get_name;
+         "test_init_balance" >:: test_init_balance;
+         "test_add_card" >:: test_add_card;
+         "test_get_hand_value" >:: test_get_hand_value;
+         "test_place_bet" >:: test_place_bet;
+         "test_is_bust" >:: test_is_bust;
+         "test_clear_hand" >:: test_clear_hand;
        ]
 
 let _ = run_test_tt_main suite
