@@ -224,8 +224,9 @@ let introduction () =
   print_string "Welcome to OCamlJack! Press ENTER to begin: ";
   let _ = read_line () in
   print_string
-    "Please type in the type of dealer AI you want to play(risky, safe, \
-     normal): ";
+    "Please type in the difficulty of the game, which determines\n\
+    \    when the dealer will stop drawing cards ('risky', 'safe', or \
+     'normal'): ";
   let input = read_line () in
   let dealer_strategy =
     match input with

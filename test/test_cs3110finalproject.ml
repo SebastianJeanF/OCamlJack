@@ -56,6 +56,30 @@ let test_to_string_card _ =
   assert_equal "7 of Clubs" (to_string c)
 
 (*---------GAME---------*)
+(** Helper functions to make
+    - make_random_move : ? -> Game.move
+    - make_random_bet : ? -> int
+    - create_ordered_deck : ? -> Deck.t
+    - create_reverse_orderd_decl : ? -> Deck.t *)
+
+(** Test that in any dealer strategy game mode
+    - The player always win if they don't have over 21 AND the dealer busted *)
+
+(** Test that whenever the dealer is risky
+    - Dealer's hand is 20 or greater
+    - Each game has random number of people playing? *)
+
+(** Test that whenever the dealer is normal
+    - Dealer's hand is 17 or greater *)
+
+(** Test that whenever the dealer is safe
+    - Dealer's hand is 14 or greater*)
+
+(** Test for bets
+    - Make sure that crashes happen appropriately
+    - Betting for 1 person
+    - Betting for random number of players at beginning of game is the expected
+      values *)
 
 (*--------PLAYER--------*)
 
