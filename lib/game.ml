@@ -171,10 +171,6 @@ let place_bet amount g =
       g.curr_player_idx <- g.curr_player_idx + 1;
       g
 
-(* [TODO] Make start_game function that changes game state from End to
-   NewPlayer, and sets curr_player to equal 0; Check if there is at least one
-   non-dealer player in the game *)
-
 let clear_hands g =
   if g.state <> End then g
   else
