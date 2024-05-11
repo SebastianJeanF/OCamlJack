@@ -44,11 +44,6 @@ val update : move -> t -> t
   (** [update move game] is an updated [game] where the current player made [move]
       in the running [game] *)
 
-val compute_end_result : t -> (Player.player * bool) array
-(** [compute_end_result game] is a reporting of every player in the [game]
-    associataed with whether they won their bet or not. Requires: [game] is not
-    currently running; [game] has ran at least once*)
-
 val has_won : Player.player -> t -> bool
 (** [has_won player game] checks if the given player has won the game. Requires:
     [game] is not currently running; [game] has ran at least once *)
@@ -73,7 +68,11 @@ val place_bet : int -> t -> t
 val start_game : t -> t
 (** [start_game game] is an updated [game] where the game is started. Requires:
     [game] is not currently running; at least 1 non-human player is in [game]. *)
-
+    
+val get_end_result : t -> (Player.player * bool) array
+(** [get_end_result game] is a reporting of every player in the [game]
+    associataed with whether they won their bet or not. Requires: [game] is not
+    currently running; [game] has ran at least once *)
 
 (* [TODO]: get_players function to get list of all players in 
    game -> Used for testing suite *)

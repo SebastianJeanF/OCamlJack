@@ -64,8 +64,13 @@ let set_balances balance g =
 
 let get_state g = g.state
 
-(** At the end of the game, the dealer needs to be updated with the appropriate
-    amount of cards based on the dealer_strategy *)
+let has_won p g =
+  (not (Player.is_bust p))
+  && (Player.is_bust (get_dealer g)
+     || Player.get_hand_value p > Player.get_hand_value (get_dealer g))
+
+(* At the end of the game, the dealer needs to be updated with the appropriate
+   amount of cards based on the dealer_strategy *)
 let update_dealer g =
   let rec hit_until strategy dealer deck =
     match strategy with
@@ -79,6 +84,23 @@ let update_dealer g =
   let updated_dealer = hit_until g.dealer_strategy (get_dealer g) g.deck in
   let dealer_idx = Array.length g.players - 1 in
   g.players.(dealer_idx) <- updated_dealer
+
+(* At the end of the game, each player needs to win back their bet if they won
+   the game*)
+let update_players g =
+  let updated_players =
+    Array.map
+      (fun p -> if has_won p g then Player.win_bet 2. p else p)
+      g.players
+  in
+  g.players <- updated_players
+
+let compute_end_result g =
+  update_dealer g;
+  update_players g;
+  g.curr_player_idx <- 0;
+  g.state <- End;
+  g
 
 let update move game =
   if game.state = End then game
@@ -105,15 +127,17 @@ let update move game =
         game.players.(game.curr_player_idx) <- updated_player;
         if new_state == Bust then
           game.curr_player_idx <- game.curr_player_idx + 1;
-        game
+        if new_state == End then compute_end_result game else game
     | Stand ->
         let is_last_player =
           (* Last non-dealer player at index (len - 2) *)
           Array.length game.players - 2 == game.curr_player_idx
         in
-        if is_last_player then game.state <- End else game.state <- NewPlayer;
         game.curr_player_idx <- game.curr_player_idx + 1;
-        game
+        if is_last_player then compute_end_result game
+        else
+          let _ = game.state <- NewPlayer in
+          game
     | DoubleDown -> (
         try
           let drawn_card, updated_deck = Deck.draw_card game.deck in
@@ -133,31 +157,12 @@ let update move game =
 
           game.state <- new_state;
           game.curr_player_idx <- game.curr_player_idx + 1;
-          game
+          if new_state == End then compute_end_result game else game
         with Player.InsufficientBalance ->
           game.state <- TryAgain;
           game)
 
-let has_won p g =
-  (not (Player.is_bust p))
-  && (Player.is_bust (get_dealer g)
-     || Player.get_hand_value p > Player.get_hand_value (get_dealer g))
-
-(* At the end of the game, each player needs to win back their bet if they won
-   the game*)
-let update_players g =
-  let updated_players =
-    Array.map
-      (fun p -> if has_won p g then Player.win_bet 2. p else p)
-      g.players
-  in
-  g.players <- updated_players
-
-let compute_end_result g =
-  update_dealer g;
-  update_players g;
-  g.curr_player_idx <- 0;
-  Array.map (fun p -> (p, has_won p g)) g.players
+let get_end_result g = Array.map (fun p -> (p, has_won p g)) g.players
 
 let place_bet amount g =
   if g.state <> End then g

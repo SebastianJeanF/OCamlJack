@@ -2,13 +2,14 @@
    (ssm238), Varun Gande (vg262) *)
 
 open OUnit2
-(* open Cs3110finalproject.Game open Cs3110finalproject.Player *)
 
-(*---------DECK---------*)
+(* open Cs3110finalproject.Game open Cs3110finalproject.Player *)
 open Cs3110finalproject
 open Cs3110finalproject.Deck
 open Cs3110finalproject.Card
 open Cs3110finalproject.Game
+open Cs3110finalproject.Player
+(*---------DECK---------*)
 
 let compare_decks expected actual =
   let sorted_expected =
@@ -58,7 +59,6 @@ let test_to_string_card _ =
   let c = Card.create 7 Clubs in
   assert_equal "7 of Clubs" (to_string c)
 
-(*---------GAME---------*)
 (** Helper functions to make
     - make_random_move : ? -> Game.move
     - make_random_bet : ? -> int
@@ -83,6 +83,56 @@ let test_to_string_card _ =
     - Betting for 1 person
     - Betting for random number of players at beginning of game is the expected
       values *)
+
+(*---------GAME---------*)
+
+(* Helper function to create a game with a single player *)
+let create_test_game strategy num_players =
+  let game = ref (init_game strategy) in
+  for i = 1 to num_players do
+    game := add_player ("Player " ^ string_of_int i) !game
+  done;
+  set_balances 100 !game
+
+let dealer_strategy = HitUntil 17
+
+(* let easy_dealer_strategy = HitUntil 14  *)
+(* let hard_dealer_strategy = HitUntil 20 *)
+
+(* Helper function to make a random move *)
+let make_random_move () =
+  let random = Random.int 3 in
+  match random with
+  | 0 -> Stand
+  | 1 -> Hit
+  | _ -> DoubleDown
+
+let random_run_game g =
+  let rec run_game g =
+    match get_state g with
+    | End -> g
+    | _ -> run_game (update (make_random_move ()) g)
+  in
+  run_game g
+
+let max_valid_hand = 21
+
+let test_valid_player_win =
+  QCheck2.Test.make ~count:1000 ~name:"player wins correctly in 1-player game"
+    QCheck2.Gen.unit (fun () ->
+      let players =
+        create_test_game dealer_strategy 1 |> random_run_game |> get_end_result
+      in
+      let player_won, player_val, dealer_val =
+        ( snd players.(0),
+          get_hand_value (fst players.(0)),
+          get_hand_value (fst players.(1)) )
+      in
+      let valid_player_win =
+        player_val > dealer_val || dealer_val > max_valid_hand
+      in
+
+      (not player_won) || valid_player_win)
 
 let test_init_game _ =
   let game = init_game (HitUntil 17) in
@@ -115,14 +165,6 @@ let test_has_won _ =
   assert_equal false
     (has_won player { game_with_player with players = [| player; dealer |] })
 
-(* Helper function to create a game with a single player *)
-let create_test_game strategy =
-  let game = init_game strategy in
-  let game = add_player "Player 1" game in
-  set_balances 100 game
-
-let dealer_strategy = HitUntil 17
-
 (* Test case for hitting when the player's hand is not bust *)
 (* Helper function to add cards to a player's hand *)
 let add_cards cards player =
@@ -130,7 +172,7 @@ let add_cards cards player =
 
 (* Test case for standing *)
 let test_update_stand _ =
-  let game = create_test_game dealer_strategy in
+  let game = create_test_game dealer_strategy 1 in
   let player_cards = [ Card.create 2 Clubs; Card.create 10 Hearts ] in
   let player = add_cards player_cards (get_curr_player game) in
   let game = { game with players = Array.make 2 player } in
@@ -139,7 +181,7 @@ let test_update_stand _ =
 
 (* Test case for double down when the player has sufficient balance *)
 let test_update_double_down_sufficient_balance _ =
-  let game = create_test_game dealer_strategy in
+  let game = create_test_game dealer_strategy 1 in
   let player_cards = [ Card.create 2 Clubs; Card.create 10 Hearts ] in
   let player = add_cards player_cards (get_curr_player game) in
   let game = { game with players = Array.make 2 player } in
@@ -167,6 +209,8 @@ let test_set_balances _ =
 let test_get_state _ =
   let game = init_game (HitUntil 17) in
   assert_equal (get_state game) End
+
+(*---------PLAYER---------*)
 
 (* Test cases for get_balance *)
 let test_get_balance _ =
@@ -248,33 +292,39 @@ let test_clear_hand _ =
   let player_with_clear_hand = Player.clear_hand player_with_cards in
   assert_equal [] (Player.get_hand player_with_clear_hand)
 
+(*---------TEST SUITE---------*)
+let test_valid_player_win = QCheck_runner.to_ounit2_test test_valid_player_win
+
 let suite =
-  "test_suite"
-  >::: [
-         "rank and suit of created card" >:: test_create_card;
-         "string representation of card" >:: test_to_string_card;
-         "created deck contains all cards" >:: test_create_deck;
-         "shuffled deck contains all cards" >:: test_shuffle_deck;
-         "drawn card" >:: test_draw_card;
-         "test_init_game" >:: test_init_game;
-         "test_add_player" >:: test_add_player;
-         "test_get_current_player" >:: test_get_curr_player;
-         "test_has_won" >:: test_has_won;
-         "test_update_stand" >:: test_update_stand;
-         "test_update_double_down_sufficient_balance"
-         >:: test_update_double_down_sufficient_balance;
-         "test_get_dealer" >:: test_get_dealer;
-         "test_set_balances" >:: test_set_balances;
-         "test_get_state" >:: test_get_state;
-         "test_get_balance" >:: test_get_balance;
-         "test_get_hand" >:: test_get_hand;
-         "test_get_name" >:: test_get_name;
-         "test_init_balance" >:: test_init_balance;
-         "test_add_card" >:: test_add_card;
-         "test_get_hand_value" >:: test_get_hand_value;
-         "test_place_bet" >:: test_place_bet;
-         "test_is_bust" >:: test_is_bust;
-         "test_clear_hand" >:: test_clear_hand;
-       ]
+  OUnit2.(
+    "test_suite"
+    >::: [
+           "rank and suit of created card" >:: test_create_card;
+           "string representation of card" >:: test_to_string_card;
+           "created deck contains all cards" >:: test_create_deck;
+           "shuffled deck contains all cards" >:: test_shuffle_deck;
+           "drawn card" >:: test_draw_card;
+           "test_init_game" >:: test_init_game;
+           "test_add_player" >:: test_add_player;
+           "test_get_current_player" >:: test_get_curr_player;
+           "test_has_won" >:: test_has_won;
+           "test_update_stand" >:: test_update_stand;
+           "test_update_double_down_sufficient_balance"
+           >:: test_update_double_down_sufficient_balance;
+           "test_get_dealer" >:: test_get_dealer;
+           "test_set_balances" >:: test_set_balances;
+           "test_get_state" >:: test_get_state;
+           "test_get_balance" >:: test_get_balance;
+           "test_get_hand" >:: test_get_hand;
+           "test_get_name" >:: test_get_name;
+           "test_init_balance" >:: test_init_balance;
+           "test_add_card" >:: test_add_card;
+           "test_get_hand_value" >:: test_get_hand_value;
+           "test_place_bet" >:: test_place_bet;
+           "test_is_bust" >:: test_is_bust;
+           "test_clear_hand" >:: test_clear_hand;
+           (* QCheck2 Tests*)
+           test_valid_player_win;
+         ])
 
 let _ = run_test_tt_main suite

@@ -93,7 +93,7 @@ let print_reg_hand player =
 
 let print_round_end g =
   let open O.Game in
-  let players = compute_end_result g in
+  let players = get_end_result g in
   print_reg_hand (get_dealer g);
 
   (* Print result for each players*)
