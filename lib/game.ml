@@ -64,10 +64,13 @@ let set_balances balance g =
 
 let get_state g = g.state
 
+(* Requires update_dealer to be ran first*)
 let has_won p g =
   (not (Player.is_bust p))
   && (Player.is_bust (get_dealer g)
      || Player.get_hand_value p > Player.get_hand_value (get_dealer g))
+
+let all_players_busted g = Array.for_all Player.is_bust g.players
 
 (* At the end of the game, the dealer needs to be updated with the appropriate
    amount of cards based on the dealer_strategy *)
@@ -75,13 +78,23 @@ let update_dealer g =
   let rec hit_until strategy dealer deck =
     match strategy with
     | HitUntil limit ->
-        if Player.get_hand_value dealer < limit then
+        if Player.get_hand_value dealer < limit then (
           let drawn_card, updated_deck = Deck.draw_card deck in
           let updated_dealer = Player.add_card drawn_card dealer in
-          hit_until strategy updated_dealer updated_deck
+          g.deck <- updated_deck;
+          hit_until strategy updated_dealer updated_deck)
         else dealer
   in
-  let updated_dealer = hit_until g.dealer_strategy (get_dealer g) g.deck in
+
+  let updated_dealer =
+    if not (all_players_busted g) then
+      hit_until g.dealer_strategy (get_dealer g) g.deck
+    else
+      (* Only get a card 1 more time (So dealer has 2 cards) *)
+      let drawn_card, updated_deck = Deck.draw_card g.deck in
+      g.deck <- updated_deck;
+      Player.add_card drawn_card (get_dealer g)
+  in
   let dealer_idx = Array.length g.players - 1 in
   g.players.(dealer_idx) <- updated_dealer
 

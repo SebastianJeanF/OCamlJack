@@ -113,7 +113,7 @@ let random_run_game g =
     | End -> g
     | _ -> run_game (update (make_random_move ()) g)
   in
-  run_game g
+  run_game (start_game g)
 
 let max_valid_hand = 21
 
@@ -131,8 +131,70 @@ let test_valid_player_win =
       let valid_player_win =
         player_val > dealer_val || dealer_val > max_valid_hand
       in
-
       (not player_won) || valid_player_win)
+
+let test_valid_player_lost =
+  QCheck2.Test.make ~count:1000 ~name:"player loses correctly in 1-player game"
+    QCheck2.Gen.unit (fun () ->
+      let players =
+        create_test_game dealer_strategy 1 |> random_run_game |> get_end_result
+      in
+      let player_won, player_val, dealer_val =
+        ( snd players.(0),
+          get_hand_value (fst players.(0)),
+          get_hand_value (fst players.(1)) )
+      in
+      let valid_player_lost =
+        (player_val <= dealer_val && dealer_val <= max_valid_hand)
+        || player_val > max_valid_hand
+      in
+      player_won || valid_player_lost)
+
+let test_valid_players_win =
+  QCheck2.Test.make ~count:1000 ~name:"players win correctly in 2-player game"
+    QCheck2.Gen.unit (fun () ->
+      let players =
+        create_test_game dealer_strategy 2 |> random_run_game |> get_end_result
+      in
+      let player1_won, player2_won, player1_val, player2_val, dealer_val =
+        ( snd players.(0),
+          snd players.(1),
+          get_hand_value (fst players.(0)),
+          get_hand_value (fst players.(1)),
+          get_hand_value (fst players.(2)) )
+      in
+      let valid_player1_win =
+        player1_val > dealer_val || dealer_val > max_valid_hand
+      in
+      let valid_player2_win =
+        player2_val > dealer_val || dealer_val > max_valid_hand
+      in
+      ((not player1_won) || valid_player1_win)
+      && ((not player2_won) || valid_player2_win))
+
+let test_valid_players_lost =
+  QCheck2.Test.make ~count:1000 ~name:"players lose correctly in 2-player game"
+    QCheck2.Gen.unit (fun () ->
+      let players =
+        create_test_game dealer_strategy 2 |> random_run_game |> get_end_result
+      in
+      let player1_won, player2_won, player1_val, player2_val, dealer_val =
+        ( snd players.(0),
+          snd players.(1),
+          get_hand_value (fst players.(0)),
+          get_hand_value (fst players.(1)),
+          get_hand_value (fst players.(2)) )
+      in
+      let valid_player1_lost =
+        (player1_val <= dealer_val && dealer_val <= max_valid_hand)
+        || player1_val > max_valid_hand
+      in
+      let valid_player2_lost =
+        (player2_val <= dealer_val && dealer_val <= max_valid_hand)
+        || player2_val > max_valid_hand
+      in
+      (player1_won || valid_player1_lost) && (player2_won || valid_player2_lost))
+(* Test case for creating a card *)
 
 let test_init_game _ =
   let game = init_game (HitUntil 17) in
@@ -293,38 +355,49 @@ let test_clear_hand _ =
   assert_equal [] (Player.get_hand player_with_clear_hand)
 
 (*---------TEST SUITE---------*)
-let test_valid_player_win = QCheck_runner.to_ounit2_test test_valid_player_win
+let valid_player_win_check = QCheck_runner.to_ounit2_test test_valid_player_win
+
+let valid_player_lost_check =
+  QCheck_runner.to_ounit2_test test_valid_player_lost
+
+let valid_players_win_check =
+  QCheck_runner.to_ounit2_test test_valid_players_win
+
+let valid_players_lost_check =
+  QCheck_runner.to_ounit2_test test_valid_players_lost
 
 let suite =
-  OUnit2.(
-    "test_suite"
-    >::: [
-           "rank and suit of created card" >:: test_create_card;
-           "string representation of card" >:: test_to_string_card;
-           "created deck contains all cards" >:: test_create_deck;
-           "shuffled deck contains all cards" >:: test_shuffle_deck;
-           "drawn card" >:: test_draw_card;
-           "test_init_game" >:: test_init_game;
-           "test_add_player" >:: test_add_player;
-           "test_get_current_player" >:: test_get_curr_player;
-           "test_has_won" >:: test_has_won;
-           "test_update_stand" >:: test_update_stand;
-           "test_update_double_down_sufficient_balance"
-           >:: test_update_double_down_sufficient_balance;
-           "test_get_dealer" >:: test_get_dealer;
-           "test_set_balances" >:: test_set_balances;
-           "test_get_state" >:: test_get_state;
-           "test_get_balance" >:: test_get_balance;
-           "test_get_hand" >:: test_get_hand;
-           "test_get_name" >:: test_get_name;
-           "test_init_balance" >:: test_init_balance;
-           "test_add_card" >:: test_add_card;
-           "test_get_hand_value" >:: test_get_hand_value;
-           "test_place_bet" >:: test_place_bet;
-           "test_is_bust" >:: test_is_bust;
-           "test_clear_hand" >:: test_clear_hand;
-           (* QCheck2 Tests*)
-           test_valid_player_win;
-         ])
+  "test_suite"
+  >::: [
+         "rank and suit of created card" >:: test_create_card;
+         "string representation of card" >:: test_to_string_card;
+         "created deck contains all cards" >:: test_create_deck;
+         "shuffled deck contains all cards" >:: test_shuffle_deck;
+         "drawn card" >:: test_draw_card;
+         "test_init_game" >:: test_init_game;
+         "test_add_player" >:: test_add_player;
+         "test_get_current_player" >:: test_get_curr_player;
+         "test_has_won" >:: test_has_won;
+         "test_update_stand" >:: test_update_stand;
+         "test_update_double_down_sufficient_balance"
+         >:: test_update_double_down_sufficient_balance;
+         "test_get_dealer" >:: test_get_dealer;
+         "test_set_balances" >:: test_set_balances;
+         "test_get_state" >:: test_get_state;
+         "test_get_balance" >:: test_get_balance;
+         "test_get_hand" >:: test_get_hand;
+         "test_get_name" >:: test_get_name;
+         "test_init_balance" >:: test_init_balance;
+         "test_add_card" >:: test_add_card;
+         "test_get_hand_value" >:: test_get_hand_value;
+         "test_place_bet" >:: test_place_bet;
+         "test_is_bust" >:: test_is_bust;
+         "test_clear_hand" >:: test_clear_hand;
+         (* QCheck2 Tests*)
+         valid_player_win_check;
+         valid_player_lost_check;
+         valid_players_win_check;
+         valid_players_lost_check;
+       ]
 
 let _ = run_test_tt_main suite
