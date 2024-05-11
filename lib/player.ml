@@ -42,7 +42,7 @@ let get_hand_value p =
 (** [multiply bet factor] is (integer [bet]) times (float [factor]), rounded up
     to nearest integer *)
 let mulitply bet factor =
-  let round_up num = int_of_float (num +. 1.) in
+  let round_up num = int_of_float num in
   round_up (float_of_int bet *. factor)
 
 let win_bet factor = function

@@ -85,14 +85,16 @@ let test_to_string_card _ =
       values *)
 
 (*---------GAME---------*)
+let default_balance = 100
 
-(* Helper function to create a game with a single player *)
+(* Helper function to create a game with a single player, balance default to
+   100 *)
 let create_test_game strategy num_players =
   let game = ref (init_game strategy) in
   for i = 1 to num_players do
     game := add_player ("Player " ^ string_of_int i) !game
   done;
-  set_balances 100 !game
+  set_balances default_balance !game
 
 let dealer_strategy = HitUntil 17
 
@@ -107,21 +109,31 @@ let make_random_move () =
   | 1 -> Hit
   | _ -> DoubleDown
 
-let random_run_game g =
+let make_random_simple_move () =
+  let random = Random.int 2 in
+  match random with
+  | 0 -> Stand
+  | _ -> Hit
+
+(* Helper function to create a random bet *)
+
+let run_helper f g =
   let rec run_game g =
     match get_state g with
     | End -> g
-    | _ -> run_game (update (make_random_move ()) g)
+    | _ -> run_game (update (f ()) g)
   in
   run_game (start_game g)
 
+let run_random_game g = run_helper make_random_move g
+let run_random_simple_game g = run_helper make_random_simple_move g
 let max_valid_hand = 21
 
 let test_valid_player_win =
   QCheck2.Test.make ~count:1000 ~name:"player wins correctly in 1-player game"
     QCheck2.Gen.unit (fun () ->
       let players =
-        create_test_game dealer_strategy 1 |> random_run_game |> get_end_result
+        create_test_game dealer_strategy 1 |> run_random_game |> get_end_result
       in
       let player_won, player_val, dealer_val =
         ( snd players.(0),
@@ -137,7 +149,7 @@ let test_valid_player_lost =
   QCheck2.Test.make ~count:1000 ~name:"player loses correctly in 1-player game"
     QCheck2.Gen.unit (fun () ->
       let players =
-        create_test_game dealer_strategy 1 |> random_run_game |> get_end_result
+        create_test_game dealer_strategy 1 |> run_random_game |> get_end_result
       in
       let player_won, player_val, dealer_val =
         ( snd players.(0),
@@ -151,50 +163,131 @@ let test_valid_player_lost =
       player_won || valid_player_lost)
 
 let test_valid_players_win =
-  QCheck2.Test.make ~count:1000 ~name:"players win correctly in 2-player game"
-    QCheck2.Gen.unit (fun () ->
+  QCheck2.Test.make ~count:1000
+    ~name:"players win correctly in multi-player game" QCheck2.Gen.unit
+    (fun () ->
+      let num_players = Random.int 10 + 1 in
       let players =
-        create_test_game dealer_strategy 2 |> random_run_game |> get_end_result
+        create_test_game dealer_strategy num_players
+        |> run_random_game |> get_end_result
       in
-      let player1_won, player2_won, player1_val, player2_val, dealer_val =
-        ( snd players.(0),
-          snd players.(1),
-          get_hand_value (fst players.(0)),
-          get_hand_value (fst players.(1)),
-          get_hand_value (fst players.(2)) )
+      let valid_player_win player_val dealer_val =
+        player_val > dealer_val || dealer_val > max_valid_hand
       in
-      let valid_player1_win =
-        player1_val > dealer_val || dealer_val > max_valid_hand
-      in
-      let valid_player2_win =
-        player2_val > dealer_val || dealer_val > max_valid_hand
-      in
-      ((not player1_won) || valid_player1_win)
-      && ((not player2_won) || valid_player2_win))
+      let passed = ref true in
+      for i = 0 to num_players - 1 do
+        let player, has_won = players.(i) in
+        let player_val = get_hand_value player in
+        let dealer_val = get_hand_value (fst players.(num_players)) in
+        if not ((not has_won) || valid_player_win player_val dealer_val) then
+          passed := false
+      done;
+      !passed)
 
 let test_valid_players_lost =
-  QCheck2.Test.make ~count:1000 ~name:"players lose correctly in 2-player game"
-    QCheck2.Gen.unit (fun () ->
+  QCheck2.Test.make ~count:1000
+    ~name:"players lose correctly in multi-player game" QCheck2.Gen.unit
+    (fun () ->
+      let num_players = Random.int 10 + 1 in
       let players =
-        create_test_game dealer_strategy 2 |> random_run_game |> get_end_result
+        create_test_game dealer_strategy num_players
+        |> run_random_game |> get_end_result
       in
-      let player1_won, player2_won, player1_val, player2_val, dealer_val =
-        ( snd players.(0),
-          snd players.(1),
-          get_hand_value (fst players.(0)),
-          get_hand_value (fst players.(1)),
-          get_hand_value (fst players.(2)) )
+      let valid_player_lost player_val dealer_val =
+        (player_val <= dealer_val && dealer_val <= max_valid_hand)
+        || player_val > max_valid_hand
       in
-      let valid_player1_lost =
-        (player1_val <= dealer_val && dealer_val <= max_valid_hand)
-        || player1_val > max_valid_hand
+      let passed = ref true in
+      for i = 0 to num_players - 1 do
+        let player, has_won = players.(i) in
+        let player_val = get_hand_value player in
+        let dealer_val = get_hand_value (fst players.(num_players)) in
+        if not (has_won || valid_player_lost player_val dealer_val) then
+          passed := false
+      done;
+      !passed)
+
+let test_simple_bets_lost =
+  QCheck2.Test.make ~count:1000
+    ~name:"player lose correct bet amount when they can only stand or hit"
+    QCheck2.Gen.unit (fun () ->
+      let bet = Random.int 101 in
+      let players =
+        create_test_game dealer_strategy 1
+        |> Game.place_bet bet |> run_random_simple_game |> get_end_result
       in
-      let valid_player2_lost =
-        (player2_val <= dealer_val && dealer_val <= max_valid_hand)
-        || player2_val > max_valid_hand
+      let player, has_won = players.(0) in
+      let balance = Player.get_balance player in
+      has_won || balance = default_balance - bet)
+
+let test_simple_bets_win =
+  QCheck2.Test.make ~count:1000
+    ~name:"player win correct bet amount when they can only stand or hit"
+    QCheck2.Gen.unit (fun () ->
+      let bet = Random.int 101 in
+      let players =
+        create_test_game dealer_strategy 1
+        |> Game.place_bet bet |> run_random_simple_game |> get_end_result
       in
-      (player1_won || valid_player1_lost) && (player2_won || valid_player2_lost))
-(* Test case for creating a card *)
+      let player, has_won = players.(0) in
+      let balance = Player.get_balance player in
+      (not has_won) || balance = default_balance + bet)
+
+let test_players_simple_bet_outcomes =
+  QCheck2.Test.make ~count:1000
+    ~name:"all players get correct bet amount when they can only stand or hit"
+    QCheck2.Gen.unit (fun () ->
+      let num_players = Random.int 10 + 1 in
+      let bets = Array.init num_players (fun _ -> Random.int 101) in
+
+      let game = create_test_game dealer_strategy num_players in
+      let players =
+        Array.fold_left (fun g bet -> Game.place_bet bet g) game bets
+        |> run_random_simple_game |> get_end_result
+      in
+      let valid_balance_outcome (player, has_won) bet =
+        let balance = Player.get_balance player in
+        (has_won && balance = default_balance + bet)
+        || ((not has_won) && balance = default_balance - bet)
+      in
+      let passed = ref true in
+      for i = 0 to num_players - 1 do
+        if not (valid_balance_outcome players.(i) bets.(i)) then passed := false
+      done;
+      !passed)
+
+let test_multi_game_valid_player_outcome =
+  QCheck2.Test.make ~count:100
+    ~name:
+      "player wins correctly in multi-player session, multiple games in a row"
+    QCheck2.Gen.unit (fun () ->
+      let passed = ref true in
+      for _ = 0 to 10 do
+        let num_players = Random.int 10 + 1 in
+        let players =
+          create_test_game dealer_strategy num_players
+          |> run_random_game |> get_end_result
+        in
+        let valid_player_lost player_val dealer_val =
+          (player_val <= dealer_val && dealer_val <= max_valid_hand)
+          || player_val > max_valid_hand
+        in
+        let valid_player_win player_val dealer_val =
+          player_val > dealer_val || dealer_val > max_valid_hand
+        in
+        let passed = ref true in
+        for i = 0 to num_players - 1 do
+          let player = fst players.(i) in
+          let player_val = get_hand_value player in
+          let dealer_val = get_hand_value (fst players.(num_players)) in
+          if
+            not
+              (valid_player_win player_val dealer_val
+              || valid_player_lost player_val dealer_val)
+          then passed := false
+        done
+      done;
+      !passed)
 
 let test_init_game _ =
   let game = init_game (HitUntil 17) in
@@ -366,6 +459,15 @@ let valid_players_win_check =
 let valid_players_lost_check =
   QCheck_runner.to_ounit2_test test_valid_players_lost
 
+let simple_bets_lost_check = QCheck_runner.to_ounit2_test test_simple_bets_lost
+let simple_bets_win_check = QCheck_runner.to_ounit2_test test_simple_bets_win
+
+let players_simple_bet_outcomes_check =
+  QCheck_runner.to_ounit2_test test_players_simple_bet_outcomes
+
+let multi_game_valid_player_outcome_check =
+  QCheck_runner.to_ounit2_test test_multi_game_valid_player_outcome
+
 let suite =
   "test_suite"
   >::: [
@@ -398,6 +500,10 @@ let suite =
          valid_player_lost_check;
          valid_players_win_check;
          valid_players_lost_check;
+         simple_bets_lost_check;
+         simple_bets_win_check;
+         players_simple_bet_outcomes_check;
+         multi_game_valid_player_outcome_check;
        ]
 
 let _ = run_test_tt_main suite
