@@ -2,8 +2,6 @@
    (ssm238), Varun Gande (vg262) *)
 
 open OUnit2
-
-(* open Cs3110finalproject.Game open Cs3110finalproject.Player *)
 open Cs3110finalproject
 open Cs3110finalproject.Deck
 open Cs3110finalproject.Card
@@ -33,6 +31,12 @@ let test_create_deck _ =
       [] all_ranks
   in
   compare_decks all_cards deck
+
+let test_shuffle_empty_deck _ =
+  let empty_deck = [] in
+  let shuffled_empty_deck = shuffle_deck [] in
+  assert_equal (List.length empty_deck) (List.length shuffled_empty_deck);
+  compare_decks empty_deck shuffled_empty_deck
 
 let test_shuffle_deck _ =
   let deck = create_deck () in
@@ -475,6 +479,7 @@ let suite =
          "string representation of card" >:: test_to_string_card;
          "created deck contains all cards" >:: test_create_deck;
          "shuffled deck contains all cards" >:: test_shuffle_deck;
+         "shuffled empty deck is empty" >:: test_shuffle_empty_deck;
          "drawn card" >:: test_draw_card;
          "test_init_game" >:: test_init_game;
          "test_add_player" >:: test_add_player;

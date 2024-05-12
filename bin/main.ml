@@ -16,7 +16,8 @@ let turn_message =
   "What move do you want to make next?\n\
   \ (Type 'stand', 'hit', or 'double down'): "
 
-let try_again_message = "Invalid move. Valid moves are 'stand' or 'hit'"
+let try_again_message =
+  "Invalid move. Valid moves are 'stand', 'hit', or 'double down'."
 
 let no_double_down_message =
   "You can't double down! You don't have enough tokens!"

@@ -2,7 +2,7 @@
    (ssm238), Varun Gande (vg262) *)
 open Card
 
-type deck = card list (* temporarily exposing the representation type here *)
+type deck = card list
 (** Type representing a deck of cards. *)
 
 val create_deck : unit -> deck

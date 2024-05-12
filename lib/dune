@@ -1,2 +1,4 @@
 (library
- (name cs3110finalproject))
+ (name cs3110finalproject)
+ (instrumentation
+  (backend bisect_ppx)))
