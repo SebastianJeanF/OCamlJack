@@ -18,6 +18,20 @@ let compare_decks expected actual =
   in
   assert_equal sorted_expected sorted_actual
 
+let test_compare_decks_different_order _ =
+  let deck1 =
+    [ Card.create 1 Spades; Card.create 2 Hearts; Card.create 3 Diamonds ]
+  in
+  let deck2 =
+    [ Card.create 3 Diamonds; Card.create 2 Hearts; Card.create 1 Spades ]
+  in
+  compare_decks deck1 deck2
+
+let test_create_deck_with_duplicates _ =
+  let deck = create_deck () in
+  let unique_deck = List.sort_uniq compare deck in
+  assert_equal (List.length deck) (List.length unique_deck)
+
 let test_create_deck _ =
   let deck = create_deck () in
   let all_ranks = List.init 13 (fun i -> i + 1) in
@@ -55,6 +69,18 @@ let test_draw_card _ =
 let test_draw_card_empty_deck _ =
   let empty_deck = [] in
   assert_raises (Failure "Empty deck") (fun () -> draw_card empty_deck)
+
+let test_draw_until_empty _ =
+  let deck = create_deck () in
+  let rec draw_until_empty deck acc =
+    match deck with
+    | [] -> acc
+    | _ ->
+        let _, remaining_deck = draw_card deck in
+        draw_until_empty remaining_deck (acc + 1)
+  in
+  let num_drawn = draw_until_empty deck 0 in
+  assert_equal 52 num_drawn
 
 (*---------CARD---------*)
 
@@ -384,6 +410,14 @@ let test_update_hit_at_21 _ =
   let updated_game = update Hit game in
   assert_equal (get_state updated_game) End
 
+let test_update_end_state_dealer_hits_21 _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let dealer = add_card (Card.create 1 Hearts) (get_dealer game) in
+  let game_with_cards = { game with players = [| player; dealer |] } in
+  let updated_game = update Hit game_with_cards in
+  assert_equal End (get_state updated_game)
+
 (* Test case for standing *)
 let test_update_stand _ =
   let game = create_test_game dealer_strategy 1 in
@@ -401,6 +435,70 @@ let test_update_double_down_sufficient_balance _ =
   let game = { game with players = Array.make 2 player } in
   let updated_game = update DoubleDown game in
   assert_equal (get_state updated_game) End
+
+(* New test: Test for updating the game state to 'End' when all players stand *)
+let test_update_end_state_all_players_stand _ =
+  let game = create_test_game dealer_strategy 2 in
+  let player1 = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let player1_stands =
+    update Stand { game with players = [| player1; get_dealer game |] }
+  in
+  let player2 =
+    add_card (Card.create 8 Spades) (get_curr_player player1_stands)
+  in
+  let player2_stands =
+    update Stand
+      { player1_stands with players = [| player2; get_dealer player1_stands |] }
+  in
+  assert_equal End (get_state player2_stands)
+
+(* New test: Test for updating the game state to 'End' when all players bust *)
+let test_update_end_state_all_players_bust _ =
+  let game = create_test_game dealer_strategy 2 in
+  let player1 = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let player1_busts =
+    update Hit { game with players = [| player1; get_dealer game |] }
+  in
+  let player2 =
+    add_card (Card.create 8 Spades) (get_curr_player player1_busts)
+  in
+  let player2_busts =
+    update Hit
+      { player1_busts with players = [| player2; get_dealer player1_busts |] }
+  in
+  assert_equal End (get_state player2_busts)
+
+(* New test: Test for updating the game state to 'End' when dealer's hand value
+   is equal to 21 *)
+let test_update_end_state_dealer_hits_21_directly _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let dealer = add_card (Card.create 1 Hearts) (get_dealer game) in
+  let game_with_cards = { game with players = [| player; dealer |] } in
+  let updated_game = update Hit game_with_cards in
+  let dealer_with_21 =
+    add_card (Card.create 10 Diamonds) (get_dealer updated_game)
+  in
+  let game_with_dealer_21 =
+    { updated_game with players = [| player; dealer_with_21 |] }
+  in
+  let final_updated_game = update Stand game_with_dealer_21 in
+  assert_equal End (get_state final_updated_game)
+
+(* New test: Test for updating the game state to 'End' when dealer busts *)
+let test_update_end_state_dealer_busts _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let dealer = add_card (Card.create 10 Spades) (get_dealer game) in
+  let game_with_cards = { game with players = [| player; dealer |] } in
+  let updated_game = update Hit game_with_cards in
+  let dealer_with_bust =
+    add_card (Card.create 2 Clubs) (get_dealer updated_game)
+  in
+  let game_with_dealer_bust =
+    { updated_game with players = [| player; dealer_with_bust |] }
+  in
+  assert_equal End (get_state (update Stand game_with_dealer_bust))
 
 (* Test that the get_dealer function returns the dealer player *)
 let test_get_dealer _ =
@@ -573,6 +671,10 @@ let suite =
          "shuffled empty deck is empty" >:: test_shuffle_empty_deck;
          "drawn card" >:: test_draw_card;
          "drawing from empty deck" >:: test_draw_card_empty_deck;
+         "test_compare_decks_different_order"
+         >:: test_compare_decks_different_order;
+         "test_create_deck_with_duplicates" >:: test_create_deck_with_duplicates;
+         "test_draw_until_empty" >:: test_draw_until_empty;
          "test_init_game" >:: test_init_game;
          "test_add_player" >:: test_add_player;
          "test_get_current_player" >:: test_get_curr_player;
@@ -599,6 +701,16 @@ let suite =
          "test_place_bet" >:: test_place_bet;
          "test_is_bust" >:: test_is_bust;
          "test_update_hit_at_21" >:: test_update_hit_at_21;
+         "test_update_end_state_dealer_hits_21"
+         >:: test_update_end_state_dealer_hits_21;
+         "test_update_end_state_all_players_stand"
+         >:: test_update_end_state_all_players_stand;
+         "test_update_end_state_all_players_bust"
+         >:: test_update_end_state_all_players_bust;
+         "test_update_end_state_dealer_hits_21_directly"
+         >:: test_update_end_state_dealer_hits_21_directly;
+         "test_update_end_state_dealer_busts"
+         >:: test_update_end_state_dealer_busts;
          "test_clear_hand" >:: test_clear_hand;
          "test_insufficient_balance_placing_bet"
          >:: test_insufficient_balance_placing_bet;
