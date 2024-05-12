@@ -1,5 +1,5 @@
-(* @authors Eric Han (eh636), Sebastian Jean-Francois (sj728), Sriram Murali
-   (ssm238), Varun Gande (vg262) *)
+(* @authors Sebastian Jean-Francois (sj728), Sriram Murali (ssm238), Varun Gande
+   (vg262) *)
 
 open Card
 
@@ -25,7 +25,6 @@ val get_name : player -> string
 val get_hand_value : player -> int
 (** [get_hand_value player] is the value of [player]'s hand *)
 
-
 val clear_hand : player -> player
 (** [clear_hand player] is an updated [player] with an empty hand *)
 
@@ -48,8 +47,8 @@ val multiply_bet : float -> player -> player
     [factor] is 1 or greater *)
 
 val win_bet : float -> player -> player
-(** [win_bet factor player] is an updated [player] who won a [factor]
-    times their bet (rounded up to nearest whole number), their balance
-    increasing by that amount; [player]'s bet resets to 0. Example:
-    Player.balance = 4, Player.bet = 3 -> win_bet 2. player ->
-    Player.balance = 4 + 2*3, Player.bet = 0 *)
+(** [win_bet factor player] is an updated [player] who won a [factor] times
+    their bet (rounded up to nearest whole number), their balance increasing by
+    that amount; [player]'s bet resets to 0. Example: Player.balance = 4,
+    Player.bet = 3 -> win_bet 2. player -> Player.balance = 4 + 2*3, Player.bet
+    = 0 *)
