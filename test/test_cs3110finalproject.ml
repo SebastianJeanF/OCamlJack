@@ -52,6 +52,10 @@ let test_draw_card _ =
     (not (List.mem card remaining_deck));
   assert_equal (List.length deck - 1) (List.length remaining_deck)
 
+let test_draw_card_empty_deck _ =
+  let empty_deck = [] in
+  assert_raises (Failure "Empty deck") (fun () -> draw_card empty_deck)
+
 (*---------CARD---------*)
 
 let test_create_card _ =
@@ -324,10 +328,61 @@ let test_has_won _ =
   assert_equal false
     (has_won player { game_with_player with players = [| player; dealer |] })
 
+(* Test case for a tie between player and dealer *)
+let test_game_tie _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let dealer = add_card (Card.create 10 Hearts) (get_dealer game) in
+  let game = { game with players = [| player; dealer |] } in
+  assert_equal (has_won player game) false
+
+(* Test for a game with multiple players *)
+let test_game_with_multiple_players _ =
+  let game = create_test_game dealer_strategy 5 in
+  assert_equal 6 (Array.length game.players)
+
+(* Test for a game with the maximum number of players *)
+let test_game_with_max_players _ =
+  let game = create_test_game dealer_strategy 10 in
+  assert_equal 11 (Array.length game.players)
+
+(* Test for a game with no players *)
+let test_game_with_no_players _ =
+  let game = create_test_game dealer_strategy 0 in
+  assert_equal 1 (Array.length game.players)
+
+(* Test for a game with a different dealer strategy *)
+let test_game_with_different_dealer_strategy _ =
+  let game = create_test_game (HitUntil 14) 1 in
+  assert_equal (HitUntil 14) game.dealer_strategy
+
+(* Test for a tie between player and dealer in a multi-player game *)
+let test_multi_player_game_tie _ =
+  let game = create_test_game dealer_strategy 5 in
+  let players = game.players in
+  let dealer = get_dealer game in
+  Array.iter
+    (fun player ->
+      let player = add_card (Card.create 10 Hearts) player in
+      let dealer = add_card (Card.create 10 Hearts) dealer in
+      let game = { game with players = [| player; dealer |] } in
+      assert_equal (has_won player game) false)
+    players
+
 (* Test case for hitting when the player's hand is not bust *)
 (* Helper function to add cards to a player's hand *)
 let add_cards cards player =
   List.fold_left (fun p c -> Player.add_card c p) player cards
+
+(* Test case for hitting when the player's hand already contains 21 points *)
+let test_update_hit_at_21 _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player_cards = [ Card.create 10 Hearts; Card.create 11 Spades ] in
+  (* Player's hand already has 21 *)
+  let player = add_cards player_cards (get_curr_player game) in
+  let game = { game with players = Array.make 2 player } in
+  let updated_game = update Hit game in
+  assert_equal (get_state updated_game) End
 
 (* Test case for standing *)
 let test_update_stand _ =
@@ -451,6 +506,42 @@ let test_clear_hand _ =
   let player_with_clear_hand = Player.clear_hand player_with_cards in
   assert_equal [] (Player.get_hand player_with_clear_hand)
 
+(* Test for a player with insufficient balance placing a bet *)
+let test_insufficient_balance_placing_bet _ =
+  let player = Player.create "Jack" in
+  let player_with_balance = Player.init_balance 50 player in
+  assert_raises Player.InsufficientBalance (fun () ->
+      Player.place_bet 100 player_with_balance)
+
+(* Test for a player getting bust after hitting *)
+let test_player_getting_bust_after_hit _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
+  let player_with_hit =
+    update Hit { game with players = [| player; get_dealer game |] }
+  in
+  assert_equal (get_state player_with_hit) End
+
+(* Test for adding multiple cards to a player's hand *)
+let test_add_multiple_cards_to_hand _ =
+  let player = Player.create "Jason" in
+  let cards =
+    [ Card.create 5 Hearts; Card.create 10 Diamonds; Card.create 2 Clubs ]
+  in
+  let player_with_cards = add_cards cards player in
+  assert_equal (List.length cards)
+    (List.length (Player.get_hand player_with_cards))
+
+(* Test for a player getting blackjack *)
+let test_player_getting_blackjack _ =
+  let game = create_test_game dealer_strategy 1 in
+  let player = add_card (Card.create 1 Hearts) (get_curr_player game) in
+  let player_with_blackjack = add_card (Card.create 11 Hearts) player in
+  let game_with_blackjack =
+    { game with players = [| player_with_blackjack; get_dealer game |] }
+  in
+  assert_equal true (has_won player_with_blackjack game_with_blackjack)
+
 (*---------TEST SUITE---------*)
 let valid_player_win_check = QCheck_runner.to_ounit2_test test_valid_player_win
 
@@ -481,10 +572,18 @@ let suite =
          "shuffled deck contains all cards" >:: test_shuffle_deck;
          "shuffled empty deck is empty" >:: test_shuffle_empty_deck;
          "drawn card" >:: test_draw_card;
+         "drawing from empty deck" >:: test_draw_card_empty_deck;
          "test_init_game" >:: test_init_game;
          "test_add_player" >:: test_add_player;
          "test_get_current_player" >:: test_get_curr_player;
          "test_has_won" >:: test_has_won;
+         "test_is_tie" >:: test_game_tie;
+         "test_game_with_multiple_players" >:: test_game_with_multiple_players;
+         "test_game_with_max_players" >:: test_game_with_max_players;
+         "test_game_with_no_players" >:: test_game_with_no_players;
+         "test_game_with_different_dealer_strategy"
+         >:: test_game_with_different_dealer_strategy;
+         "test_multi_player_game_tie" >:: test_multi_player_game_tie;
          "test_update_stand" >:: test_update_stand;
          "test_update_double_down_sufficient_balance"
          >:: test_update_double_down_sufficient_balance;
@@ -499,7 +598,14 @@ let suite =
          "test_get_hand_value" >:: test_get_hand_value;
          "test_place_bet" >:: test_place_bet;
          "test_is_bust" >:: test_is_bust;
+         "test_update_hit_at_21" >:: test_update_hit_at_21;
          "test_clear_hand" >:: test_clear_hand;
+         "test_insufficient_balance_placing_bet"
+         >:: test_insufficient_balance_placing_bet;
+         "test_player_getting_bust_after_hit"
+         >:: test_player_getting_bust_after_hit;
+         "test_add_multiple_cards_to_hand" >:: test_add_multiple_cards_to_hand;
+         "test_player_getting_blackjack" >:: test_player_getting_blackjack;
          (* QCheck2 Tests*)
          valid_player_win_check;
          valid_player_lost_check;
