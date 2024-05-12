@@ -3,10 +3,10 @@
 
 open OUnit2
 open Cs3110finalproject
-open Cs3110finalproject.Deck
-open Cs3110finalproject.Card
-open Cs3110finalproject.Game
-open Cs3110finalproject.Player
+open Deck
+open Card
+open Game
+open Player
 (*---------DECK---------*)
 
 let compare_decks expected actual =
@@ -436,7 +436,7 @@ let test_update_double_down_sufficient_balance _ =
   let updated_game = update DoubleDown game in
   assert_equal (get_state updated_game) End
 
-(* New test: Test for updating the game state to 'End' when all players stand *)
+(* Test for updating the game state to 'End' when all players stand *)
 let test_update_end_state_all_players_stand _ =
   let game = create_test_game dealer_strategy 2 in
   let player1 = add_card (Card.create 10 Hearts) (get_curr_player game) in
@@ -452,7 +452,7 @@ let test_update_end_state_all_players_stand _ =
   in
   assert_equal End (get_state player2_stands)
 
-(* New test: Test for updating the game state to 'End' when all players bust *)
+(* Test for updating the game state to 'End' when all players bust *)
 let test_update_end_state_all_players_bust _ =
   let game = create_test_game dealer_strategy 2 in
   let player1 = add_card (Card.create 10 Hearts) (get_curr_player game) in
@@ -468,8 +468,8 @@ let test_update_end_state_all_players_bust _ =
   in
   assert_equal End (get_state player2_busts)
 
-(* New test: Test for updating the game state to 'End' when dealer's hand value
-   is equal to 21 *)
+(* Test for updating the game state to 'End' when dealer's hand value is equal
+   to 21 *)
 let test_update_end_state_dealer_hits_21_directly _ =
   let game = create_test_game dealer_strategy 1 in
   let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
@@ -485,7 +485,7 @@ let test_update_end_state_dealer_hits_21_directly _ =
   let final_updated_game = update Stand game_with_dealer_21 in
   assert_equal End (get_state final_updated_game)
 
-(* New test: Test for updating the game state to 'End' when dealer busts *)
+(* Test for updating the game state to 'End' when dealer busts *)
 let test_update_end_state_dealer_busts _ =
   let game = create_test_game dealer_strategy 1 in
   let player = add_card (Card.create 10 Hearts) (get_curr_player game) in
