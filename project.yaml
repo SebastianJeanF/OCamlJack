@@ -5,8 +5,6 @@ group:
     netid: vg262
   - name: Sebastian Jean-Francois
     netid: sj728
-  - name: Eric Han
-    netid: eh636
   - name: Sriram Murali
     netid: ssm238
 # Your PM.
@@ -30,6 +28,6 @@ desc: >
 
   Enjoy a sleek and intuitive terminal interface designed for seamless gameplay.
   Tailor your gaming experience with customizable options, including adjustable 
-  bet sizes, number of decks, and player strategies. Whether you're a novice or 
-  a seasoned pro, OCamlJack offers gameplay that suits your preferences. Let the
-  fun begin!
+  bet sizes, player/computer strategies, and multiplayer support. Whether you're 
+  a novice or a seasoned pro, OCamlJack offers gameplay that suits your 
+  preferences. Let the fun begin!
