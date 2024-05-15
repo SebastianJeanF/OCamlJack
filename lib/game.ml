@@ -179,6 +179,7 @@ let get_end_result g = Array.map (fun p -> (p, has_won p g)) g.players
 
 let place_bet amount g =
   if g.state <> End then g
+  else if amount < 0 then raise (Invalid_argument "Cannot place negative bet")
   else
     let curr_player = get_curr_player g in
     if curr_player = get_dealer g then g

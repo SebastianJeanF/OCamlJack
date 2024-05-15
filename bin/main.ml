@@ -281,17 +281,17 @@ let place_bets game =
   (* Ask again for player to place bet if error occurs *)
   let rec place_bet_loop game =
     try place_bet game with
-    | Failure _ ->
-        (* Likely, they incorrectly bet a non-numeric value *)
-        let () =
-          print_newlines 1;
-          print_endline "** Please enter a valid integer! **"
-        in
-        place_bet_loop game
     | O.Player.InsufficientBalance ->
         let () =
           print_newlines 1;
           print_endline "** You don't have enough money to make that bet! **"
+        in
+        place_bet_loop game
+    | _ ->
+        (* Likely, they incorrectly bet a non-numeric value *)
+        let () =
+          print_newlines 1;
+          print_endline "** Please enter a valid integer! **"
         in
         place_bet_loop game
   in
