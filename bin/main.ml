@@ -42,6 +42,7 @@ let print_card card =
   let rank_str =
     match rank with
     | 1 -> " A "
+    | 10 -> " 10"
     | 11 -> " J "
     | 12 -> " Q "
     | 13 -> " K "
@@ -176,12 +177,13 @@ let rec init_players game =
 
   (* Get Player Type *)
   while not !is_valid_input do
-    print_endline "Is this player a human or computer?";
-    print_string "Please type 'h' for human or 'c' for computer: ";
+    print_endline "";
+    print_endline "Do you want to choose your name?";
+    print_string "Please type 'yes' or 'no': ";
     let input = read_line () in
     match input with
-    | "h" | "c" ->
-        if input = "h" then is_player := true;
+    | "yes" | "no" ->
+        if input = "yes" then is_player := true;
         is_valid_input := true
     | _ ->
         print_newlines 2;
@@ -196,7 +198,7 @@ let rec init_players game =
       O.Game.add_player name game
     else
       (* For now, a computer player is just a human with name "Computer" lol *)
-      O.Game.add_player "* Computer *" game
+      O.Game.add_player "* Player *" game
   in
   global_num_players := !global_num_players + 1;
 
@@ -204,6 +206,7 @@ let rec init_players game =
   let is_init_done = ref false in
   let all_players_added_game = ref updated_game in
   while not !is_init_done do
+    print_endline "";
     print_endline "Add another player? ";
     print_string "Please type 'yes' or 'no': ";
     let input = read_line () in
